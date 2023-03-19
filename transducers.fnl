@@ -36,13 +36,34 @@ been intended elsewhere."
 
 ;; --- Transducers --- ;;
 
+(fn pass [reducer]
+  "Just pass along each value of the transduction without transforming."
+  (fn [result input]
+    (if (non-nil? input)
+        (reducer result input)
+        (reducer result))))
+
+;; (transduce pass cons [1 2 3])
+
 (fn map [f]
   "Apply a function F to all elements of the transduction."
   (fn [reducer]
-    (lambda [result ?input]
-      (if (non-nil? ?input)
-          (reducer result (f ?input))
+    (fn [result input]
+      (if (non-nil? input)
+          (reducer result (f input))
           (reducer result)))))
+
+(fn filter [pred]
+  "Only keep elements from the transduction that satisfy PRED."
+  (fn [reducer]
+    (fn [result input]
+      (if (non-nil? input)
+          (if (pred input)
+              (reducer result input)
+              result)
+          (reducer result)))))
+
+;; (transduce (filter (fn [n] (= 0 (% n 2)))) cons [1 2 3 4 5])
 
 ;; --- Reducers --- ;;
 
@@ -63,7 +84,9 @@ been intended elsewhere."
 
 {:transduce transduce
  ;; --- Transducers --- ;;
+ :pass pass
  :map map
+ :filter filter
  ;; --- Reducers --- ;;
  :count count
  :cons cons
