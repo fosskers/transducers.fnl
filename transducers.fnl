@@ -1,8 +1,21 @@
-(fn transduce [xform f tbl]
-  (let [init (f)
-        xf (xform f)
-        result (reduce xf init tbl)]
-    (xf result)))
+;; --- Utilities --- ;;
+
+(fn non-nil? [x]
+  "Stronger than just checking for truthiness, since a value of false might have
+been intended elsewhere."
+  (not (= nil x)))
+
+(fn reduced? [tbl]
+  "Has a transduction been short-circuited?"
+  (and (= :table (type tbl))
+       (not (= nil (. tbl :reduced)))))
+  ;; (match tbl
+  ;;   {:reduced _} true
+  ;;   _ false))
+
+;; (reduced? [1])
+;; (reduced? {:reduced 1})
+;; (reduced? {:reduced false})
 
 (fn reduce [f id tbl]
   (let [len (length tbl)]
@@ -14,6 +27,12 @@
                 (. :reduced acc)
                 (recurse acc (+ 1 i))))))
     (recurse id 1)))
+
+(fn transduce [xform f tbl]
+  (let [init (f)
+        xf (xform f)
+        result (reduce xf init tbl)]
+    (xf result)))
 
 ;; --- Transducers --- ;;
 
@@ -41,25 +60,6 @@
       []))
 
 ;; (transduce (map (fn [n] (+ 1 n))) cons [1 2 3 4])
-
-;; --- Utilities --- ;;
-
-(fn non-nil? [x]
-  "Stronger than just checking for truthiness, since a value of false might have
-been intended elsewhere."
-  (not (= nil x)))
-
-(fn reduced? [tbl]
-  "Has a transduction been short-circuited?"
-  (and (= :table (type tbl))
-       (not (= nil (. tbl :reduced)))))
-  ;; (match tbl
-  ;;   {:reduced _} true
-  ;;   _ false))
-
-;; (reduced? [1])
-;; (reduced? {:reduced 1})
-;; (reduced? {:reduced false})
 
 {:transduce transduce
  ;; --- Transducers --- ;;
