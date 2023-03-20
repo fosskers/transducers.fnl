@@ -60,6 +60,20 @@
 
 ;; (transduce (filter (fn [n] (= 0 (% n 2)))) cons [1 2 3 4 5])
 
+(fn filter-map [f]
+  "Apply a function F to the elements of the transduction, but only keep results
+that are non-nil."
+  (fn [reducer]
+    (fn [result input]
+      (if (~= nil input)
+          (let [x (f input)]
+            (if (~= nil x)
+                (reducer result x)
+                result))
+          (reducer result)))))
+
+;; (transduce (filter-map (fn [t] (. t 1))) cons [[] [2 3] [] [5 6] [] [8 9]])
+
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
@@ -85,14 +99,24 @@
 
 ;; (transduce pass add [1 2 3])
 
+(fn mul [a b]
+  "Multiply two numbers."
+  (if (and (= nil a) (= nil b)) 1
+      (and a (= nil b)) a
+      (* a b)))
+
+;; (transduce pass mul [2 4 6])
+
 {:transduce transduce
  ;; --- Transducers --- ;;
  :pass pass
  :map map
  :filter filter
+ :filter-map filter-map
  ;; --- Reducers --- ;;
  :count count
  :cons cons
  :add add
+ :mul mul
  ;; --- Utilities --- ;;
  :reduced? reduced?}
