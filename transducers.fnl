@@ -22,26 +22,33 @@
 ;; (reduced? {:reduced 1})
 ;; (reduced? {:reduced false})
 
-(fn reduce [f id tbl]
-  (let [len (length tbl)]
+(fn reduce [f id tbl ...]
+  (let [tables (table.pack ...)
+        len (accumulate [shortest (length tbl) _ t (ipairs tables)]
+              (math.min shortest (length t)))]
     (fn recurse [acc i]
       (if (> i len)
           acc
-          (let [acc (f acc (. tbl i))]
+          (let [vals (icollect [_ t (ipairs tables)] (. t i))
+                acc (f acc (. tbl i) (table.unpack vals))]
             (if (reduced? acc)
                 (. :reduced acc)
                 (recurse acc (+ 1 i))))))
     (recurse id 1)))
 
-(fn transduce [xform f tbl]
+(fn transduce [xform f tbl ...]
   (let [init (f)
         xf (xform f)
-        result (reduce xf init tbl)]
+        result (reduce xf init tbl ...)]
     (xf result)))
 
-;; (transduce (comp (filter (fn [n] (= 0 (% n 2))))
-;;                  (map (fn [n] (* 2 n))))
-;;            cons [1 2 3 4 5])
+;; (transduce (map #(+ $1 $2)) cons [1 2 3 4] [5 6 7 8])
+
+;; (transduce (comp (filter #(= 0 (% $1 2)))
+;;                  (map #(* 2 $1)))
+;;            cons
+;;            [1 2 3 4 5]
+;;            [6 7 8 9])
 
 ;; --- Transducers --- ;;
 
@@ -57,9 +64,9 @@
 (fn map [f]
   "Apply a function F to all elements of the transduction."
   (fn [reducer]
-    (fn [result input]
+    (fn [result input ...]
       (if (~= nil input)
-          (reducer result (f input))
+          (reducer result (f input ...))
           (reducer result)))))
 
 (fn filter [pred]
@@ -78,9 +85,9 @@
   "Apply a function F to the elements of the transduction, but only keep results
 that are non-nil."
   (fn [reducer]
-    (fn [result input]
+    (fn [result input ...]
       (if (~= nil input)
-          (let [x (f input)]
+          (let [x (f input ...)]
             (if (~= nil x)
                 (reducer result x)
                 result))
