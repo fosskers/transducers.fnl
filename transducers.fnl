@@ -1,5 +1,15 @@
 ;; --- Utilities --- ;;
 
+(fn comp [f ...]
+  (accumulate [fs f i g (ipairs (table.pack ...))]
+    ;; This let is necessary to prevent an infinite loop involving strange
+    ;; binding semantics!
+    (let [z fs]
+      (fn [arg] (z (g arg))))))
+
+;; (let [f (comp #(+ 1 $1) #(length $1))]
+;;   (f "foo"))
+
 (fn reduced? [tbl]
   "Has a transduction been short-circuited?"
   (and (= :table (type tbl))
@@ -28,6 +38,10 @@
         xf (xform f)
         result (reduce xf init tbl)]
     (xf result)))
+
+;; (transduce (comp (filter (fn [n] (= 0 (% n 2))))
+;;                  (map (fn [n] (* 2 n))))
+;;            cons [1 2 3 4 5])
 
 ;; --- Transducers --- ;;
 
@@ -58,7 +72,7 @@
               result)
           (reducer result)))))
 
-;; (transduce (filter (fn [n] (= 0 (% n 2)))) cons [1 2 3 4 5])
+;; (transduce (filter #(= 0 (% $1 2))) cons [1 2 3 4 5])
 
 (fn filter-map [f]
   "Apply a function F to the elements of the transduction, but only keep results
@@ -72,7 +86,7 @@ that are non-nil."
                 result))
           (reducer result)))))
 
-;; (transduce (filter-map (fn [t] (. t 1))) cons [[] [2 3] [] [5 6] [] [8 9]])
+;; (transduce (filter-map #(. $1 1)) cons [[] [2 3] [] [5 6] [] [8 9]])
 
 ;; --- Reducers --- ;;
 
@@ -82,14 +96,14 @@ that are non-nil."
       (~= nil acc) acc
       0))
 
-;; (transduce (map (fn [n] (+ 1 n))) count [1 2 3 4])
+;; (transduce (map #(+ 1 $1)) count [1 2 3 4])
 
 (fn cons [acc input]
   (if (and (~= nil acc) (~= nil input)) (do (table.insert acc input) acc)
       (~= nil acc) acc
       []))
 
-;; (transduce (map (fn [n] (+ 1 n))) cons [1 2 3 4])
+;; (transduce (map #(+ 1 $1)) cons [1 2 3 4])
 
 (fn add [a b]
   "Add two numbers."
@@ -119,4 +133,5 @@ that are non-nil."
  :add add
  :mul mul
  ;; --- Utilities --- ;;
+ :comp comp
  :reduced? reduced?}
