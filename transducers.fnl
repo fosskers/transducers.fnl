@@ -2,7 +2,9 @@
 
 ;; TODO Make this a macro.
 (fn comp [f ...]
-  "Function composition."
+  "Function composition.
+
+`((comp f g h) 1)` is equivalent to `(f (g (h 1)))`."
   (accumulate [fs f _ g (ipairs (table.pack ...))]
     ;; This let is necessary to prevent an infinite loop involving strange
     ;; binding semantics!
@@ -29,9 +31,6 @@ the final result."
   "Has a transduction been short-circuited?"
   (and (= :table (type tbl))
        (~= nil (. tbl :reduced))))
-  ;; (match tbl
-  ;;   {:reduced _} true
-  ;;   _ false))
 
 ;; (reduced? [1])
 ;; (reduced? {:reduced 1})
@@ -81,7 +80,7 @@ the final result."
 ;; (transduce pass cons [1 2 3])
 
 (fn map [f]
-  "Apply a function F to all elements of the transduction."
+  "Apply a function `f` to all elements of the transduction."
   (fn [reducer]
     (fn [result input ...]
       (if (~= nil input)
@@ -89,7 +88,7 @@ the final result."
           (reducer result)))))
 
 (fn filter [pred]
-  "Only keep elements from the transduction that satisfy PRED."
+  "Only keep elements from the transduction that satisfy `pred`."
   (fn [reducer]
     (fn [result input]
       (if (~= nil input)
@@ -101,7 +100,7 @@ the final result."
 ;; (transduce (filter #(= 0 (% $1 2))) cons [1 2 3 4 5])
 
 (fn filter-map [f]
-  "Apply a function F to the elements of the transduction, but only keep results
+  "Apply a function `f` to the elements of the transduction, but only keep results
 that are non-nil."
   (fn [reducer]
     (fn [result input ...]
@@ -125,6 +124,8 @@ that are non-nil."
 ;; (transduce (map #(+ 1 $1)) count [1 2 3 4])
 
 (fn cons [acc input]
+  "Build up a new sequential Table of all elements that made it through the
+transduction."
   (if (and (~= nil acc) (~= nil input)) (do (table.insert acc input) acc)
       (~= nil acc) acc
       []))

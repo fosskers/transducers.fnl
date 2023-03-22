@@ -44,6 +44,8 @@ Function signature:
 
 Function composition.
 
+`((comp f g h) 1)` is equivalent to `(f (g (h 1)))`.
+
 ## `cons`
 Function signature:
 
@@ -51,7 +53,8 @@ Function signature:
 (cons acc input)
 ```
 
-**Undocumented**
+Build up a new sequential Table of all elements that made it through the
+transduction.
 
 ## `count`
 Function signature:
@@ -69,7 +72,7 @@ Function signature:
 (filter pred)
 ```
 
-Only keep elements from the transduction that satisfy PRED.
+Only keep elements from the transduction that satisfy `pred`.
 
 ## `filter-map`
 Function signature:
@@ -78,7 +81,7 @@ Function signature:
 (filter-map f)
 ```
 
-Apply a function F to the elements of the transduction, but only keep results
+Apply a function `f` to the elements of the transduction, but only keep results
 that are non-nil.
 
 ## `map`
@@ -88,7 +91,7 @@ Function signature:
 (map f)
 ```
 
-Apply a function F to all elements of the transduction.
+Apply a function `f` to all elements of the transduction.
 
 ## `mul`
 Function signature:
