@@ -528,6 +528,25 @@ with `false` if any element fails the test.
         (and (~= nil acc) (= nil input)) acc
         true)))
 
+(fn average [fallback]
+  "Calculate the average value of all numeric elements in a transduction. A
+`fallback` must be provided in case no elements made it through the
+transduction (thus protecting from division-by-zero).
+
+```fennel
+(assert (= 3.0 (transduce pass (average -1) [1 2 3 4 5])))
+```"
+  (var items 0)
+  (fn [acc input]
+    (if (and (~= nil acc) (~= nil input))
+        (do (set items (+ 1 items))
+            (+ acc input))
+        (and acc (= nil input))
+        (if (= 0 items)
+            fallback
+            (/ acc items))
+        0)))
+
 (fn table.= [a b]
   "Recursively determine if two tables are equal, non-Baker style."
   (match (type a)
