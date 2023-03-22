@@ -400,6 +400,22 @@ you're not careful.
                   (reducer result input)))
           (reducer result)))))
 
+(fn dedup [reducer]
+  "Remove adjecent duplicates from the transduction.
+
+```fennel
+(let [res (transduce dedup cons [1 1 1 2 2 2 3 3 3 4 3 3])]
+  (assert (table.= [1 2 3 4 3] res)))
+```"
+  (var prev :nothing)
+  (fn [result input]
+    (if (~= nil input)
+        (if (= prev input)
+            result
+            (do (set prev input)
+                (reducer result input)))
+        (reducer result))))
+
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
@@ -490,6 +506,7 @@ with `false` if any element fails the test.
  :window window
  :group-by group-by
  :unique unique
+ :dedup dedup
  ;; --- Reducers --- ;;
  :count count
  :cons cons

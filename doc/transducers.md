@@ -8,6 +8,7 @@
 - [`concat`](#concat)
 - [`cons`](#cons)
 - [`count`](#count)
+- [`dedup`](#dedup)
 - [`drop`](#drop)
 - [`drop-while`](#drop-while)
 - [`enumerate`](#enumerate)
@@ -113,6 +114,20 @@ Count the number of elements that made it through the transduction.
 
 ```fennel
 (assert (= 4 (transduce pass count [1 2 3 4])))
+```
+
+## `dedup`
+Function signature:
+
+```
+(dedup reducer)
+```
+
+Remove adjecent duplicates from the transduction.
+
+```fennel
+(let [res (transduce dedup cons [1 1 1 2 2 2 3 3 3 4 3 3])]
+  (assert (table.= [1 2 3 4 3] res)))
 ```
 
 ## `drop`
