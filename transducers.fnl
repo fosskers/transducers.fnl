@@ -416,6 +416,27 @@ you're not careful.
                 (reducer result input)))
         (reducer result))))
 
+(fn step [n]
+  "Only yield every `n`th element of the transduction. The first element is always
+included.
+
+```fennel
+(let [res (transduce (step 2) cons [1 2 3 4 5 6 7 8 9])]
+  (assert (table.= [1 3 5 7 9] res)))
+```"
+  (when (< n 1)
+    (error "The argument to step must be greater than 0."))
+  (fn [reducer]
+    (var curr 1)
+    (fn [result input]
+      (if (~= nil input)
+          (if (= 1 curr)
+              (do (set curr n)
+                  (reducer result input))
+              (do (set curr (- curr 1))
+                  result))
+          (reducer result)))))
+
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
@@ -507,6 +528,7 @@ with `false` if any element fails the test.
  :group-by group-by
  :unique unique
  :dedup dedup
+ :step step
  ;; --- Reducers --- ;;
  :count count
  :cons cons

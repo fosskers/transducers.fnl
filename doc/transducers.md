@@ -22,6 +22,7 @@
 - [`reduced`](#reduced)
 - [`reduced?`](#reduced-1)
 - [`segment`](#segment)
+- [`step`](#step)
 - [`take`](#take)
 - [`take-while`](#take-while)
 - [`transduce`](#transduce)
@@ -312,6 +313,21 @@ accumulated state, which may be shorter than `n`.
 
 ```fennel
 (assert (table.= [[1 2 3] [4 5]] (transduce (segment 3) cons [1 2 3 4 5])))
+```
+
+## `step`
+Function signature:
+
+```
+(step n)
+```
+
+Only yield every `n`th element of the transduction. The first element is always
+included.
+
+```fennel
+(let [res (transduce (step 2) cons [1 2 3 4 5 6 7 8 9])]
+  (assert (table.= [1 3 5 7 9] res)))
 ```
 
 ## `take`
