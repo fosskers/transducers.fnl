@@ -24,6 +24,10 @@
 ```"
   item)
 
+(fn unreduce [tbl]
+  "Unwrap a reduced value."
+  (. tbl :reduced))
+
 (fn reduced [item]
   "Announce to the transduction process that we are done, and the given `item` is
 the final result."
@@ -40,7 +44,7 @@ within transducers that have the concept of short-circuiting, like `take`.
 (assert (reduced? {:reduced false}))
 ```"
   (and (= :table (type tbl))
-       (~= nil (. tbl :reduced))))
+       (~= nil (unreduce tbl))))
 
 (fn reduce [f id tbl ...]
   (let [tables (table.pack ...)
@@ -52,7 +56,7 @@ within transducers that have the concept of short-circuiting, like `take`.
           (let [vals (icollect [_ t (ipairs tables)] (. t i))
                 acc (f acc (. tbl i) (table.unpack vals))]
             (if (reduced? acc)
-                (. acc :reduced)
+                (unreduce acc)
                 (recurse acc (+ 1 i))))))
     (recurse id 1)))
 
@@ -289,6 +293,31 @@ any element fails the test.
         (accumulate [r result _ i (ipairs input) &until (reduced? r)]
           (reducer r i))
         (reducer result))))
+
+(fn segment [n]
+  "Partition the input into tables of `n` items. If the input stops, flush any
+accumulated state, which may be shorter than `n`.
+
+```fennel
+(assert (table.= [[1 2 3] [4 5]] (transduce (segment 3) cons [1 2 3 4 5])))
+```"
+  (when (< n 1)
+    (error "The argument to segment must be a positive integer."))
+  (fn [reducer]
+    (var coll [])
+    (fn [result input]
+      (if (~= nil input)
+          (do (table.insert coll input)
+              (if (< (length coll) n)
+                  result
+                  (let [seg coll]
+                    (set coll [])
+                    (reducer result seg))))
+          (= 0 (length coll)) (reducer result)
+          (let [final (reducer result coll)]
+            (if (reduced? final)
+                (reducer (unreduce final))
+                (reducer final)))))))
 
 ;; --- Reducers --- ;;
 
