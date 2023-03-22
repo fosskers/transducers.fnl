@@ -4,6 +4,7 @@
 
 - [`add`](#add)
 - [`all`](#all)
+- [`any`](#any)
 - [`comp`](#comp)
 - [`concat`](#concat)
 - [`cons`](#cons)
@@ -59,6 +60,21 @@ with `false` if any element fails the test.
 ```fennel
 (assert (transduce pass (all #(= 3 (length $1))) ["abc" "def" "ghi"]))
 (assert (not (transduce pass (all #(= 3 (length $1))) ["abc" "de" "ghi"])))
+```
+
+## `any`
+Function signature:
+
+```
+(any pred)
+```
+
+Yield `true` if any element in the transduction satisfies `pred`. Short-circuits
+the transduction as soon as the condition is met.
+
+```fennel
+(assert (not (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7])))
+(assert (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7 2]))
 ```
 
 ## `comp`

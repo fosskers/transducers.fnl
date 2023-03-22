@@ -528,6 +528,23 @@ with `false` if any element fails the test.
         (and (~= nil acc) (= nil input)) acc
         true)))
 
+(fn any [pred]
+  "Yield `true` if any element in the transduction satisfies `pred`. Short-circuits
+the transduction as soon as the condition is met.
+
+```fennel
+(assert (not (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7])))
+(assert (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7 2]))
+```"
+  (fn [acc input]
+    (if (and (~= nil acc) (~= nil input))
+        (let [test (pred input)]
+          (if test
+              (reduced true)
+              false))
+        (and (~= nil acc) (= nil input)) acc
+        false)))
+
 (fn average [fallback]
   "Calculate the average value of all numeric elements in a transduction. A
 `fallback` must be provided in case no elements made it through the
@@ -580,6 +597,7 @@ transduction (thus protecting from division-by-zero).
  :add add
  :mul mul
  :all all
+ :any any
  ;; --- Utilities --- ;;
  :comp comp
  :reduced reduced
