@@ -2,9 +2,14 @@
 
 ;; TODO Make this a macro.
 (fn comp [f ...]
-  "Function composition.
+  "Function composition of `f` with any number of other functions.
 
-`((comp f g h) 1)` is equivalent to `(f (g (h 1)))`."
+`((comp f g h) 1)` is equivalent to `(f (g (h 1)))`.
+
+```fennel
+(let [f (comp #(+ 1 $1) #(length $1))]
+  (assert (= 4 (f \"foo\"))))
+```"
   (accumulate [fs f _ g (ipairs (table.pack ...))]
     ;; This let is necessary to prevent an infinite loop involving strange
     ;; binding semantics!
@@ -19,22 +24,23 @@
 ```"
   item)
 
-;; (let [f (comp #(+ 1 $1) #(length $1))]
-;;   (f "foo"))
-
 (fn reduced [item]
   "Announce to the transduction process that we are done, and the given `item` is
 the final result."
   {:reduced item})
 
 (fn reduced? [tbl]
-  "Has a transduction been short-circuited?"
+  "Has a transduction been short-circuited? This tests the given `tbl` for a
+certain shape produced by the `reduced` function, which itself is only called
+within transducers that have the concept of short-circuiting, like `take`.
+
+```fennel
+(assert (not (reduced? [1])))
+(assert (reduced? {:reduced 1}))
+(assert (reduced? {:reduced false}))
+```"
   (and (= :table (type tbl))
        (~= nil (. tbl :reduced))))
-
-;; (reduced? [1])
-;; (reduced? {:reduced 1})
-;; (reduced? {:reduced false})
 
 (fn reduce [f id tbl ...]
   (let [tables (table.pack ...)
@@ -50,19 +56,67 @@ the final result."
                 (recurse acc (+ 1 i))))))
     (recurse id 1)))
 
-(fn transduce [xform f tbl ...]
-  (let [init (f)
-        xf (xform f)
-        result (reduce xf init tbl ...)]
+(lambda transduce [xform reducer source ...]
+  "The entry point for processing a data source via transducer functions. It
+accepts:
+
+- `xform`: a chain of composed transducer functions, like `map` and `filter`.
+- `reducer`: a reducer function to \"collect\" or \"fold\" all the final elements together.
+- `source`: a potentially infinite source of data (but usually a table).
+- `...`: any number of additional sources.
+
+# Basic Usage
+
+Every transduction requires a data source, a way to transform individual
+elements, and a way to collapse all results into a single value. These are the
+arguments described above. To use them:
+
+```fennel
+(transduce
+  (map #(+ 1 $1)) ;; (2) Transform each element.
+  cons            ;; (3) Collecting each transformed element.
+  [1 2 3])        ;; (1) Feed each source element through the chain.
+```
+
+# Composing Transducers
+
+Fennel already supplies `each`, `collect`, and `accumulate`, so if we could only
+do one transformation at a time then Transducers wouldn't be useful. Luckily
+Transducers can be composed:
+
+```fennel
+(let [res (transduce (comp (filter-map #(. $1 1))
+                           (filter #(= 0 (% $1 2)))
+                           (map #(* 2 $1)))
+                     cons
+                     [[] [1 3] [] [4 6] [] [7 9] [] [10 12]])]
+  (assert (table.= [8 20] res)))
+```
+
+This transduction works over a potentially infinite stream of tables. It says:
+
+1. Keep only the first element of non-empty tables.
+2. Then, of those, keep only even numbers.
+3. Then, of those, multiply them by 2.
+
+The surviving values are then collected into a new table.
+
+# Processing multiple source at once
+
+It is possible to pass as many sources to `transduce` as you want. However, only
+as many elements as held by the shortest source will be passed through. This is
+analogous to how `zip` works in many languages. For example:
+
+```fennel
+(let [res (transduce (map #(+ $1 $2)) cons [1 2 3] [4 5 6 7])]
+  (assert (table.= [5 7 9] res)))
+```
+
+Notice that the function passed to `map` can be of any arity to accomodate this."
+  (let [init (reducer)
+        xf (xform reducer)
+        result (reduce xf init source ...)]
     (xf result)))
-
-;; (transduce (map #(+ $1 $2)) cons [1 2 3 4] [5 6 7 8])
-
-;; (transduce (comp (filter #(= 0 (% $1 2)))
-;;                  (map #(* 2 $1)))
-;;            cons
-;;            [1 2 3 4 5]
-;;            [6 7 8 9])
 
 ;; --- Transducers --- ;;
 
@@ -77,10 +131,12 @@ the final result."
         (reducer result input)
         (reducer result))))
 
-;; (transduce pass cons [1 2 3])
-
 (fn map [f]
-  "Apply a function `f` to all elements of the transduction."
+  "Apply a function `f` to all elements of the transduction.
+
+```fennel
+(assert (table.= [2 3 4] (transduce (map #(+ 1 $1)) cons [1 2 3])))
+```"
   (fn [reducer]
     (fn [result input ...]
       (if (~= nil input)
@@ -88,7 +144,11 @@ the final result."
           (reducer result)))))
 
 (fn filter [pred]
-  "Only keep elements from the transduction that satisfy `pred`."
+  "Only keep elements from the transduction that satisfy `pred`.
+
+```fennel
+(assert (table.= [2 4] (transduce (filter #(= 0 (% $1 2))) cons [1 2 3 4 5])))
+```"
   (fn [reducer]
     (fn [result input]
       (if (~= nil input)
@@ -97,11 +157,14 @@ the final result."
               result)
           (reducer result)))))
 
-;; (transduce (filter #(= 0 (% $1 2))) cons [1 2 3 4 5])
-
 (fn filter-map [f]
   "Apply a function `f` to the elements of the transduction, but only keep results
-that are non-nil."
+that are non-nil.
+
+```fennel
+(let [res (transduce (filter-map #(. $1 1)) cons [[] [2 3] [] [5 6] [] [8 9]])]
+  (assert (table.= [2 5 8] res)))
+```"
   (fn [reducer]
     (fn [result input ...]
       (if (~= nil input)
@@ -160,13 +223,12 @@ with `false` if any element fails the test."
         (and (~= nil acc) (= nil input)) acc
         true)))
 
-;; (transduce pass (all #(= 3 (length $1))) ["abc" "def" "ghi"])
-;; (transduce pass (all #(= 3 (length $1))) ["abc" "defe" "ghi"])
-
 (fn table.= [a b]
-  "Determine if two tables are equal, non-Baker style."
-  (and (= (length a) (length b))
-       (transduce (map #(= $1 $2)) (all id) a b)))
+  "Recursively determine if two tables are equal, non-Baker style."
+  (match (type a)
+    :table (and (= (length a) (length b))
+                (transduce (map table.=) (all id) a b))
+    _ (= a b)))
 
 {:transduce transduce
  ;; --- Transducers --- ;;
