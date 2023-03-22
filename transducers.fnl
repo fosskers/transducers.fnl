@@ -437,6 +437,31 @@ included.
                   result))
           (reducer result)))))
 
+(fn scan [f seed]
+  "Build up successive values from the results of previous applications of a given
+function `f`. A `seed` is also given, and appears as the first element passed
+through the transduction.
+
+```fennel
+(assert (table.= [0 1 3 6 10] (transduce (scan add 0) cons [1 2 3 4])))
+(assert (table.= [0 1] (transduce (comp (scan add 0) (take 2)) cons [1 2 3 4])))
+```"
+  (fn [reducer]
+    (var prev seed)
+    (fn [result input]
+      (if (~= nil input)
+          (let [old prev
+                result (reducer result old)]
+            (if (reduced? result)
+                result
+                (let [new (f prev input)]
+                  (set prev new)
+                  result)))
+          (let [result (reducer result prev)]
+            (if (reduced? result)
+                (reducer (unreduce result))
+                (reducer result)))))))
+
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
@@ -529,6 +554,7 @@ with `false` if any element fails the test.
  :unique unique
  :dedup dedup
  :step step
+ :scan scan
  ;; --- Reducers --- ;;
  :count count
  :cons cons

@@ -21,6 +21,7 @@
 - [`pass`](#pass)
 - [`reduced`](#reduced)
 - [`reduced?`](#reduced-1)
+- [`scan`](#scan)
 - [`segment`](#segment)
 - [`step`](#step)
 - [`take`](#take)
@@ -299,6 +300,22 @@ within transducers that have the concept of short-circuiting, like `take`.
 (assert (not (reduced? [1])))
 (assert (reduced? {:reduced 1}))
 (assert (reduced? {:reduced false}))
+```
+
+## `scan`
+Function signature:
+
+```
+(scan f seed)
+```
+
+Build up successive values from the results of previous applications of a given
+function `f`. A `seed` is also given, and appears as the first element passed
+through the transduction.
+
+```fennel
+(assert (table.= [0 1 3 6 10] (transduce (scan add 0) cons [1 2 3 4])))
+(assert (table.= [0 1] (transduce (comp (scan add 0) (take 2)) cons [1 2 3 4])))
 ```
 
 ## `segment`
