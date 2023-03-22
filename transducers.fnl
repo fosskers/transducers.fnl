@@ -352,6 +352,36 @@ than `n`, then this yields nothing.
                       (reducer result dest)))))
           (reducer result)))))
 
+(fn group-by [f]
+  "Group the input stream into tables via some function `f`. The cutoff criterion
+is whether the return value of `f` changes between two consecutive elements of
+the transduction.
+
+```fennel
+(let [res (transduce (group-by #(= 0 (% $1 2))) cons [2 4 6 7 9 1 2 4 6 3])]
+  (assert (table.= [[2 4 6] [7 9 1] [2 4 6] [3]] res)))
+```"
+  (fn [reducer]
+    (var prev :nothing)
+    (var coll [])
+    (fn [result input]
+      (if (~= nil input)
+          (let [fout (f input)]
+            (if (or (= fout prev) (= prev :nothing))
+                (do (set prev fout)
+                    (table.insert coll input)
+                    result)
+                (let [tbl coll]
+                  (set prev fout)
+                  (set coll [input])
+                  (reducer result tbl))))
+          (= 0 (length coll)) (reducer result)
+          (let [final (reducer result coll)]
+            ;; See `segment` for why this extra check is necessary.
+            (if (reduced? final)
+                (reducer (unreduce final))
+                (reducer final)))))))
+
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
