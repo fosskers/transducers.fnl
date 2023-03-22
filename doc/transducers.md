@@ -7,13 +7,19 @@
 - [`comp`](#comp)
 - [`cons`](#cons)
 - [`count`](#count)
+- [`drop`](#drop)
+- [`drop-while`](#drop-while)
+- [`enumerate`](#enumerate)
 - [`filter`](#filter)
 - [`filter-map`](#filter-map)
+- [`intersperse`](#intersperse)
 - [`map`](#map)
 - [`mul`](#mul)
 - [`pass`](#pass)
 - [`reduced`](#reduced)
 - [`reduced?`](#reduced-1)
+- [`take`](#take)
+- [`take-while`](#take-while)
 - [`transduce`](#transduce)
 
 ## `add`
@@ -23,7 +29,14 @@ Function signature:
 (add a b)
 ```
 
-Add two numbers.
+Add two numbers `a` and `b`. Unlike the normal `+`, this can be passed to
+higher-order functions and behaves as a legal reducer.
+
+```fennel
+(assert (= 0 (add)))
+(assert (= 1 (add 1)))
+(assert (= 3 (add 1 2)))
+```
 
 ## `all`
 Function signature:
@@ -35,6 +48,11 @@ Function signature:
 Yield `true` if all elements of the transduction satisfy `pred`. Short-circuit
 with `false` if any element fails the test.
 
+```fennel
+(assert (transduce pass (all #(= 3 (length $1))) ["abc" "def" "ghi"]))
+(assert (not (transduce pass (all #(= 3 (length $1))) ["abc" "de" "ghi"])))
+```
+
 ## `comp`
 Function signature:
 
@@ -42,9 +60,14 @@ Function signature:
 (comp f ...)
 ```
 
-Function composition.
+Function composition of `f` with any number of other functions.
 
 `((comp f g h) 1)` is equivalent to `(f (g (h 1)))`.
+
+```fennel
+(let [f (comp #(+ 1 $1) #(length $1))]
+  (assert (= 4 (f "foo"))))
+```
 
 ## `cons`
 Function signature:
@@ -56,6 +79,10 @@ Function signature:
 Build up a new sequential Table of all elements that made it through the
 transduction.
 
+```fennel
+(assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
+```
+
 ## `count`
 Function signature:
 
@@ -65,6 +92,53 @@ Function signature:
 
 Count the number of elements that made it through the transduction.
 
+```fennel
+(assert (= 4 (transduce pass count [1 2 3 4])))
+```
+
+## `drop`
+Function signature:
+
+```
+(drop n)
+```
+
+Drop the first `n` elements of the transduction.
+
+```fennel
+(assert (table.= [1 2 3 4 5] (transduce (drop 0) cons [1 2 3 4 5])))
+(assert (table.= [4 5] (transduce (drop 3) cons [1 2 3 4 5])))
+(assert (table.= [] (transduce (drop 100) cons [1 2 3 4 5])))
+```
+
+## `drop-while`
+Function signature:
+
+```
+(drop-while pred)
+```
+
+Drop elements from the front of the transduction that satisfy `pred`.
+
+```fennel
+(let [res (transduce (drop-while #(= 0 (% $1 2))) cons [2 4 6 8 9 10])]
+  (assert (table.= [9 10] res)))
+```
+
+## `enumerate`
+Function signature:
+
+```
+(enumerate reducer)
+```
+
+Index every value passed through the transduction into a pair. Starts at 1.
+
+```fennel
+(let [res (transduce enumerate cons ["a" "b" "c"])]
+  (assert (table.= [[1 "a"] [2 "b"] [3 "c"]] res)))
+```
+
 ## `filter`
 Function signature:
 
@@ -73,6 +147,10 @@ Function signature:
 ```
 
 Only keep elements from the transduction that satisfy `pred`.
+
+```fennel
+(assert (table.= [2 4] (transduce (filter #(= 0 (% $1 2))) cons [1 2 3 4 5])))
+```
 
 ## `filter-map`
 Function signature:
@@ -84,6 +162,25 @@ Function signature:
 Apply a function `f` to the elements of the transduction, but only keep results
 that are non-nil.
 
+```fennel
+(let [res (transduce (filter-map #(. $1 1)) cons [[] [2 3] [] [5 6] [] [8 9]])]
+  (assert (table.= [2 5 8] res)))
+```
+
+## `intersperse`
+Function signature:
+
+```
+(intersperse elem)
+```
+
+Insert an `elem` between each value of the transduction.
+
+```fennel
+(assert (table.= [1] (transduce (intersperse 0) cons [1])))
+(assert (table.= [1 0 2 0 3] (transduce (intersperse 0) cons [1 2 3])))
+```
+
 ## `map`
 Function signature:
 
@@ -93,6 +190,10 @@ Function signature:
 
 Apply a function `f` to all elements of the transduction.
 
+```fennel
+(assert (table.= [2 3 4] (transduce (map #(+ 1 $1)) cons [1 2 3])))
+```
+
 ## `mul`
 Function signature:
 
@@ -100,7 +201,14 @@ Function signature:
 (mul a b)
 ```
 
-Multiply two numbers.
+Multiply two numbers `a` and `b`. Unlike the normal `*`, this can be passed to
+higher-order functions and behaves as a legal reducer.
+
+```fennel
+(assert (= 1 (mul)))
+(assert (= 2 (mul 2)))
+(assert (= 6 (mul 2 3)))
+```
 
 ## `pass`
 Function signature:
@@ -132,16 +240,108 @@ Function signature:
 (reduced? tbl)
 ```
 
-Has a transduction been short-circuited?
+Has a transduction been short-circuited? This tests the given `tbl` for a
+certain shape produced by the `reduced` function, which itself is only called
+within transducers that have the concept of short-circuiting, like `take`.
+
+```fennel
+(assert (not (reduced? [1])))
+(assert (reduced? {:reduced 1}))
+(assert (reduced? {:reduced false}))
+```
+
+## `take`
+Function signature:
+
+```
+(take n)
+```
+
+Keep the first `n` elements of the transduction.
+
+```fennel
+(assert (table.= [] (transduce (take 0) cons [1 2 3 4 5])))
+(assert (table.= [1 2 3] (transduce (take 3) cons [1 2 3 4 5])))
+(assert (table.= [1 2 3 4 5] (transduce (take 100) cons [1 2 3 4 5])))
+```
+
+## `take-while`
+Function signature:
+
+```
+(take-while pred)
+```
+
+Keep only elements which satisfy `pred`, and stop the transduction as soon as
+any element fails the test.
+
+```fennel
+(assert (table.= [2 4 6 8] (transduce (take-while #(= 0 (% $1 2))) cons [2 4 6 8 9 2])))
+```
 
 ## `transduce`
 Function signature:
 
 ```
-(transduce xform f tbl ...)
+(transduce xform reducer source ...)
 ```
 
-**Undocumented**
+The entry point for processing a data source via transducer functions. It
+accepts:
+
+- `xform`: a chain of composed transducer functions, like `map` and `filter`.
+- `reducer`: a reducer function to "collect" or "fold" all the final elements together.
+- `source`: a potentially infinite source of data (but usually a table).
+- `...`: any number of additional sources.
+
+### Basic Usage
+
+Every transduction requires a data source, a way to transform individual
+elements, and a way to collapse all results into a single value. These are the
+arguments described above. To use them:
+
+```fennel
+(transduce
+  (map #(+ 1 $1)) ;; (2) Transform each element.
+  cons            ;; (3) Collecting each transformed element.
+  [1 2 3])        ;; (1) Feed each source element through the chain.
+```
+
+### Composing Transducers
+
+Fennel already supplies `each`, `collect`, and `accumulate`, so if we could only
+do one transformation at a time then Transducers wouldn't be useful. Luckily
+Transducers can be composed:
+
+```fennel
+(let [res (transduce (comp (filter-map #(. $1 1))
+                           (filter #(= 0 (% $1 2)))
+                           (map #(* 2 $1)))
+                     cons
+                     [[] [1 3] [] [4 6] [] [7 9] [] [10 12]])]
+  (assert (table.= [8 20] res)))
+```
+
+This transduction works over a potentially infinite stream of tables. It says:
+
+1. Keep only the first element of non-empty tables.
+2. Then, of those, keep only even numbers.
+3. Then, of those, multiply them by 2.
+
+The surviving values are then collected into a new table.
+
+### Processing multiple source at once
+
+It is possible to pass as many sources to `transduce` as you want. However, only
+as many elements as held by the shortest source will be passed through. This is
+analogous to how `zip` works in many languages. For example:
+
+```fennel
+(let [res (transduce (map #(+ $1 $2)) cons [1 2 3] [4 5 6 7])]
+  (assert (table.= [5 7 9] res)))
+```
+
+Notice that the function passed to `map` can be of any arity to accomodate this.
 
 
 <!-- Generated with Fenneldoc v1.0.0

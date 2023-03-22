@@ -174,46 +174,179 @@ that are non-nil.
                 result))
           (reducer result)))))
 
-;; (transduce (filter-map #(. $1 1)) cons [[] [2 3] [] [5 6] [] [8 9]])
+(fn drop [n]
+  "Drop the first `n` elements of the transduction.
+
+```fennel
+(assert (table.= [1 2 3 4 5] (transduce (drop 0) cons [1 2 3 4 5])))
+(assert (table.= [4 5] (transduce (drop 3) cons [1 2 3 4 5])))
+(assert (table.= [] (transduce (drop 100) cons [1 2 3 4 5])))
+```"
+  (fn [reducer]
+    (var dropped 0)
+    (fn [result input]
+      (if (~= nil input)
+          (if (< dropped n)
+              (do (set dropped (+ 1 dropped))
+                  result)
+              (reducer result input))
+          (reducer result)))))
+
+(fn drop-while [pred]
+  "Drop elements from the front of the transduction that satisfy `pred`.
+
+```fennel
+(let [res (transduce (drop-while #(= 0 (% $1 2))) cons [2 4 6 8 9 10])]
+  (assert (table.= [9 10] res)))
+```"
+  (fn [reducer]
+    (var drop? true)
+    (fn [result input]
+      (if (~= nil input)
+          (if (and drop? (pred input))
+              result
+              (do (set drop? false)
+                  (reducer result input)))
+          (reducer result)))))
+
+(fn take [n]
+  "Keep the first `n` elements of the transduction.
+
+```fennel
+(assert (table.= [] (transduce (take 0) cons [1 2 3 4 5])))
+(assert (table.= [1 2 3] (transduce (take 3) cons [1 2 3 4 5])))
+(assert (table.= [1 2 3 4 5] (transduce (take 100) cons [1 2 3 4 5])))
+```"
+  (fn [reducer]
+    (var kept 0)
+    (fn [result input]
+      (if (~= nil input)
+          (if (= kept n)
+              (reduced result)
+              (do (set kept (+ 1 kept))
+                  (reducer result input)))
+          (reducer result)))))
+
+(fn take-while [pred]
+  "Keep only elements which satisfy `pred`, and stop the transduction as soon as
+any element fails the test.
+
+```fennel
+(assert (table.= [2 4 6 8] (transduce (take-while #(= 0 (% $1 2))) cons [2 4 6 8 9 2])))
+```"
+  (fn [reducer]
+    (fn [result input]
+      (if (~= nil input)
+          (if (not (pred input))
+              (reduced result)
+              (reducer result input))
+          (reducer result)))))
+
+(fn enumerate [reducer]
+  "Index every value passed through the transduction into a pair. Starts at 1.
+
+```fennel
+(let [res (transduce enumerate cons [\"a\" \"b\" \"c\"])]
+  (assert (table.= [[1 \"a\"] [2 \"b\"] [3 \"c\"]] res)))
+```"
+  (var n 1)
+  (fn [result input]
+    (if (~= nil input)
+        (let [pair [n input]]
+          (set n (+ 1 n))
+          (reducer result pair))
+        (reducer result))))
+
+(fn intersperse [elem]
+  "Insert an `elem` between each value of the transduction.
+
+```fennel
+(assert (table.= [1] (transduce (intersperse 0) cons [1])))
+(assert (table.= [1 0 2 0 3] (transduce (intersperse 0) cons [1 2 3])))
+```"
+  (fn [reducer]
+    (var send? false)
+    (fn [result input]
+      (if (~= nil input)
+          (if send?
+              (let [result (reducer result elem)]
+                (if (reduced? result)
+                    result
+                    (reducer result input)))
+              (do (set send? true)
+                  (reducer result input)))
+          (reducer result)))))
+
+(fn concat [reducer]
+  "Concatenate all the subtables in the transduction.
+
+```fennel
+(assert (table.= [1 2 3 4 5 6] (transduce concat cons [[1 2] [3 4] [5 6]])))
+(assert (table.= [1 2 3] (transduce (comp concat (take 3)) cons [[1 2] [3 4] [5 6]])))
+```"
+  (fn [result input]
+    (if (~= nil input)
+        (accumulate [r result _ i (ipairs input) &until (reduced? r)]
+          (reducer r i))
+        (reducer result))))
 
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
-  "Count the number of elements that made it through the transduction."
+  "Count the number of elements that made it through the transduction.
+
+```fennel
+(assert (= 4 (transduce pass count [1 2 3 4])))
+```"
   (if (and (~= nil acc) (~= nil input)) (+ 1 acc)
       (~= nil acc) acc
       0))
 
-;; (transduce (map #(+ 1 $1)) count [1 2 3 4])
-
 (fn cons [acc input]
   "Build up a new sequential Table of all elements that made it through the
-transduction."
+transduction.
+
+```fennel
+(assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
+```"
   (if (and (~= nil acc) (~= nil input)) (do (table.insert acc input) acc)
       (~= nil acc) acc
       []))
 
-;; (transduce (map #(+ 1 $1)) cons [1 2 3 4])
-
 (fn add [a b]
-  "Add two numbers."
+  "Add two numbers `a` and `b`. Unlike the normal `+`, this can be passed to
+higher-order functions and behaves as a legal reducer.
+
+```fennel
+(assert (= 0 (add)))
+(assert (= 1 (add 1)))
+(assert (= 3 (add 1 2)))
+```"
   (if (and (= nil a) (= nil b)) 0
       (and a (= nil b)) a
       (+ a b)))
 
-;; (transduce pass add [1 2 3])
-
 (fn mul [a b]
-  "Multiply two numbers."
+  "Multiply two numbers `a` and `b`. Unlike the normal `*`, this can be passed to
+higher-order functions and behaves as a legal reducer.
+
+```fennel
+(assert (= 1 (mul)))
+(assert (= 2 (mul 2)))
+(assert (= 6 (mul 2 3)))
+```"
   (if (and (= nil a) (= nil b)) 1
       (and a (= nil b)) a
       (* a b)))
 
-;; (transduce pass mul [2 4 6])
-
 (fn all [pred]
   "Yield `true` if all elements of the transduction satisfy `pred`. Short-circuit
-with `false` if any element fails the test."
+with `false` if any element fails the test.
+
+```fennel
+(assert (transduce pass (all #(= 3 (length $1))) [\"abc\" \"def\" \"ghi\"]))
+(assert (not (transduce pass (all #(= 3 (length $1))) [\"abc\" \"de\" \"ghi\"])))
+```"
   (fn [acc input]
     (if (and (~= nil acc) (~= nil input))
         (let [test (pred input)]
@@ -236,6 +369,12 @@ with `false` if any element fails the test."
  :map map
  :filter filter
  :filter-map filter-map
+ :drop drop
+ :drop-while drop-while
+ :take take
+ :take-while take-while
+ :enumerate enumerate
+ :intersperse intersperse
  ;; --- Reducers --- ;;
  :count count
  :cons cons
