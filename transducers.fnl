@@ -315,9 +315,42 @@ accumulated state, which may be shorter than `n`.
                     (reducer result seg))))
           (= 0 (length coll)) (reducer result)
           (let [final (reducer result coll)]
+            ;; Because we are in this branch of the (outer) `if`, the result was
+            ;; already supposed to be fully reduced. By dipping back into the
+            ;; transducer chain to pass through any remaining segment, the
+            ;; result might come back "reduced" again. If it is, we need to do a
+            ;; manual unwrap before making the final "victory lap" down to the
+            ;; core reducer.
             (if (reduced? final)
                 (reducer (unreduce final))
                 (reducer final)))))))
+
+(fn window [n]
+  "Yield `n`-length windows of overlapping values. This is different from `segment`
+which yields non-overlapping windows. If there were fewer items in the input
+than `n`, then this yields nothing.
+
+```fennel
+(let [res (transduce (window 3) cons [1 2 3 4 5])]
+  (assert (table.= [[1 2 3] [2 3 4] [3 4 5]] res)))
+```"
+  (when (< n 1)
+    (error "The argument to window must be a positive integer."))
+  (fn [reducer]
+    (var queue [])
+    (fn [result input]
+      (if (~= nil input)
+          (do (table.insert queue input)
+              (let [len (length queue)]
+                (if (< len n) result
+                    (= len n) (let [dest []]
+                                (table.move queue 1 len 1 dest)
+                                (reducer result dest))
+                    (let [dest []]
+                      (table.remove queue 1)
+                      (table.move queue 1 (length queue) 1 dest)
+                      (reducer result dest)))))
+          (reducer result)))))
 
 ;; --- Reducers --- ;;
 
