@@ -5,6 +5,7 @@
 - [`add`](#add)
 - [`all`](#all)
 - [`comp`](#comp)
+- [`concat`](#concat)
 - [`cons`](#cons)
 - [`count`](#count)
 - [`drop`](#drop)
@@ -67,6 +68,20 @@ Function composition of `f` with any number of other functions.
 ```fennel
 (let [f (comp #(+ 1 $1) #(length $1))]
   (assert (= 4 (f "foo"))))
+```
+
+## `concat`
+Function signature:
+
+```
+(concat reducer)
+```
+
+Concatenate all the subtables in the transduction.
+
+```fennel
+(assert (table.= [1 2 3 4 5 6] (transduce concat cons [[1 2] [3 4] [5 6]])))
+(assert (table.= [1 2 3] (transduce (comp concat (take 3)) cons [[1 2] [3 4] [5 6]])))
 ```
 
 ## `cons`

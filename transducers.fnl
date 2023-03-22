@@ -375,6 +375,7 @@ with `false` if any element fails the test.
  :take-while take-while
  :enumerate enumerate
  :intersperse intersperse
+ :concat concat
  ;; --- Reducers --- ;;
  :count count
  :cons cons
