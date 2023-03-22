@@ -382,6 +382,24 @@ the transduction.
                 (reducer (unreduce final))
                 (reducer final)))))))
 
+(fn unique [reducer]
+  "Only allow values to pass through the transduction once each.
+Stateful; this uses a Table internally as a set, so could get quite heavy if
+you're not careful.
+
+```fennel
+(let [res (transduce unique cons [1 2 1 3 2 1 2 \"abc\"])]
+  (assert (table.= [1 2 3 \"abc\"] res)))
+```"
+  (let [seen {}]
+    (fn [result input]
+      (if (~= nil input)
+          (if (. seen input)
+              result
+              (do (tset seen input true)
+                  (reducer result input)))
+          (reducer result)))))
+
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
@@ -468,6 +486,10 @@ with `false` if any element fails the test.
  :enumerate enumerate
  :intersperse intersperse
  :concat concat
+ :segment segment
+ :window window
+ :group-by group-by
+ :unique unique
  ;; --- Reducers --- ;;
  :count count
  :cons cons

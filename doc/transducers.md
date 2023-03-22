@@ -13,15 +13,19 @@
 - [`enumerate`](#enumerate)
 - [`filter`](#filter)
 - [`filter-map`](#filter-map)
+- [`group-by`](#group-by)
 - [`intersperse`](#intersperse)
 - [`map`](#map)
 - [`mul`](#mul)
 - [`pass`](#pass)
 - [`reduced`](#reduced)
 - [`reduced?`](#reduced-1)
+- [`segment`](#segment)
 - [`take`](#take)
 - [`take-while`](#take-while)
 - [`transduce`](#transduce)
+- [`unique`](#unique)
+- [`window`](#window)
 
 ## `add`
 Function signature:
@@ -182,6 +186,22 @@ that are non-nil.
   (assert (table.= [2 5 8] res)))
 ```
 
+## `group-by`
+Function signature:
+
+```
+(group-by f)
+```
+
+Group the input stream into tables via some function `f`. The cutoff criterion
+is whether the return value of `f` changes between two consecutive elements of
+the transduction.
+
+```fennel
+(let [res (transduce (group-by #(= 0 (% $1 2))) cons [2 4 6 7 9 1 2 4 6 3])]
+  (assert (table.= [[2 4 6] [7 9 1] [2 4 6] [3]] res)))
+```
+
 ## `intersperse`
 Function signature:
 
@@ -263,6 +283,20 @@ within transducers that have the concept of short-circuiting, like `take`.
 (assert (not (reduced? [1])))
 (assert (reduced? {:reduced 1}))
 (assert (reduced? {:reduced false}))
+```
+
+## `segment`
+Function signature:
+
+```
+(segment n)
+```
+
+Partition the input into tables of `n` items. If the input stops, flush any
+accumulated state, which may be shorter than `n`.
+
+```fennel
+(assert (table.= [[1 2 3] [4 5]] (transduce (segment 3) cons [1 2 3 4 5])))
 ```
 
 ## `take`
@@ -357,6 +391,38 @@ analogous to how `zip` works in many languages. For example:
 ```
 
 Notice that the function passed to `map` can be of any arity to accomodate this.
+
+## `unique`
+Function signature:
+
+```
+(unique reducer)
+```
+
+Only allow values to pass through the transduction once each.
+Stateful; this uses a Table internally as a set, so could get quite heavy if
+you're not careful.
+
+```fennel
+(let [res (transduce unique cons [1 2 1 3 2 1 2 "abc"])]
+  (assert (table.= [1 2 3 "abc"] res)))
+```
+
+## `window`
+Function signature:
+
+```
+(window n)
+```
+
+Yield `n`-length windows of overlapping values. This is different from `segment`
+which yields non-overlapping windows. If there were fewer items in the input
+than `n`, then this yields nothing.
+
+```fennel
+(let [res (transduce (window 3) cons [1 2 3 4 5])]
+  (assert (table.= [[1 2 3] [2 3 4] [3 4 5]] res)))
+```
 
 
 <!-- Generated with Fenneldoc v1.0.0
