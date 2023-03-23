@@ -14,6 +14,7 @@ Ergonomic, efficient data processing.
 - [`drop`](#drop)
 - [`drop-while`](#drop-while)
 - [`enumerate`](#enumerate)
+- [`file`](#file)
 - [`filter`](#filter)
 - [`filter-map`](#filter-map)
 - [`first`](#first)
@@ -210,6 +211,22 @@ Index every value passed through the transduction into a pair. Starts at 1.
 
 **Note:** This takes a `reducer` as an argument, but as seen in the example,
 this function is expected to be passed plain, without any argument.
+
+## `file`
+Function signature:
+
+```
+(file path)
+```
+
+Given a `path`, create a Transducer Source that yields all the lines of its
+file.
+
+To count the lines of a file:
+
+```fennel
+(transduce pass count (file "README.org"))
+```
 
 ## `filter`
 Function signature:

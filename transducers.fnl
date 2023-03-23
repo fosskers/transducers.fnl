@@ -18,12 +18,12 @@
 
 (fn unreduce [tbl]
   "Unwrap a reduced value `tbl`."
-  (. tbl :reduced))
+  (. tbl :transducers-reduced))
 
 (fn reduced [item]
   "Announce to the transduction process that we are done, and the given `item` is
 the final result."
-  {:reduced item})
+  {:transducers-reduced item})
 
 (fn reduced? [tbl]
   "Has a transduction been short-circuited? This tests the given `tbl` for a
@@ -38,7 +38,7 @@ within transducers that have the concept of short-circuiting, like `take'.
   (and (= :table (type tbl))
        (~= nil (unreduce tbl))))
 
-(fn reduce [f id tbl ...]
+(fn table-reduce [f id tbl ...]
   (let [tables (table.pack ...)
         len (accumulate [shortest (length tbl) _ t (ipairs tables)]
               (math.min shortest (length t)))]
@@ -51,6 +51,19 @@ within transducers that have the concept of short-circuiting, like `take'.
                 (unreduce acc)
                 (recurse acc (+ 1 i))))))
     (recurse id 1)))
+
+(fn file-reduce [f id path]
+  "Reduce over all the lines of a file."
+  (with-open [file (io.open path)]
+    (fn recurse [acc]
+      (let [line (file:read "*line")]
+        (if (not line)
+            acc
+            (let [new (f acc line)]
+              (if (reduced? new)
+                  (unreduce new)
+                  (recurse new))))))
+    (recurse id)))
 
 (lambda transduce [xform reducer source ...]
   "The entry point for processing a data source via transducer functions. It
@@ -111,7 +124,9 @@ analogous to how `zip` works in many languages. For example:
 Notice that the function passed to `map' can be of any arity to accomodate this."
   (let [init (reducer)
         xf (xform reducer)
-        result (reduce xf init source ...)]
+        result (match source
+                 {:transducers-file path} (file-reduce xf init path)
+                 _ (table-reduce xf init source ...))]
     (xf result)))
 
 ;; --- Transducers --- ;;
@@ -616,6 +631,21 @@ least 1 argument. For functions like this, `fold` is appropriate.
         (~= nil acc) acc
         seed)))
 
+;; --- Sources --- ;;
+
+(fn file [path]
+  "Given a `path`, create a Transducer Source that yields all the lines of its
+file.
+
+To count the lines of a file:
+
+```fennel :skip-test
+(transduce pass count (file \"README.org\"))
+```"
+  {:transducers-file path})
+
+;; --- Misc. --- ;;
+
 (fn table.= [a b]
   "Recursively determine if two tables are equal, non-Baker style."
   (match (type a)
@@ -653,6 +683,8 @@ least 1 argument. For functions like this, `fold` is appropriate.
  :any any
  :first first
  :last last
+ ;; --- Sources --- ;;
+ :file file
  ;; --- Utilities --- ;;
  :comp comp
  :reduced reduced
