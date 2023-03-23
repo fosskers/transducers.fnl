@@ -242,15 +242,13 @@ Function signature:
 (fold f seed)
 ```
 
-The fundamental reducer. [`fold`](#fold) creates an ad-hoc reducer based on
-a given 2-argument function. A SEED is also required as the initial accumulator
-value, which also becomes the return value in case there were no input left in
-the transduction.
+The fundamental reducer. `fold` creates an ad-hoc reducer based on
+a given 2-argument function `f`. A `seed` is also required as the initial
+accumulator value, which also becomes the return value in case there were no
+input left in the transduction.
 
-Functions like `+' and `*' are automatically valid reducers, because they yield
-sane values even when given 0 or 1 arguments. Other functions like `max` cannot
-be used as-is as reducers since they require at least 2 arguments. For functions
-like this, [`fold`](#fold) is appropriate.
+Functions like `math.max` cannot be used as-is as reducers since they require at
+least 1 argument. For functions like this, `fold` is appropriate.
 
 ```fennel
 (assert (= 1000 (transduce pass (fold math.max 0) [1 2 3 4 1000 5 6])))
