@@ -15,8 +15,10 @@
 - [`enumerate`](#enumerate)
 - [`filter`](#filter)
 - [`filter-map`](#filter-map)
+- [`first`](#first)
 - [`group-by`](#group-by)
 - [`intersperse`](#intersperse)
+- [`last`](#last)
 - [`map`](#map)
 - [`mul`](#mul)
 - [`pass`](#pass)
@@ -219,6 +221,19 @@ that are non-nil.
   (assert (table.= [2 5 8] res)))
 ```
 
+## `first`
+Function signature:
+
+```
+(first fallback)
+```
+
+Yield the first value of the transduction, or the `fallback` if there were none.
+
+```fennel
+(assert (= 6 (transduce (filter #(= 0 (% $1 2))) (first 0) [1 3 5 6 9])))
+```
+
 ## `group-by`
 Function signature:
 
@@ -247,6 +262,19 @@ Insert an `elem` between each value of the transduction.
 ```fennel
 (assert (table.= [1] (transduce (intersperse 0) cons [1])))
 (assert (table.= [1 0 2 0 3] (transduce (intersperse 0) cons [1 2 3])))
+```
+
+## `last`
+Function signature:
+
+```
+(last fallback)
+```
+
+Yield the final value of the transduction, or the `fallback` if there were none.
+
+```fennel
+(assert (= 10 (transduce pass (last 0) [2 4 6 7 10])))
 ```
 
 ## `map`

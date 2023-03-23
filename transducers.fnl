@@ -525,8 +525,8 @@ with `false` if any element fails the test.
           (if (and acc test)
               true
               (reduced false)))
-        (and (~= nil acc) (= nil input)) acc
-        true)))
+        (~= nil acc) acc
+      true)))
 
 (fn any [pred]
   "Yield `true` if any element in the transduction satisfies `pred`. Short-circuits
@@ -542,7 +542,7 @@ the transduction as soon as the condition is met.
           (if test
               (reduced true)
               false))
-        (and (~= nil acc) (= nil input)) acc
+        (~= nil acc) acc
         false)))
 
 (fn average [fallback]
@@ -558,11 +558,33 @@ transduction (thus protecting from division-by-zero).
     (if (and (~= nil acc) (~= nil input))
         (do (set items (+ 1 items))
             (+ acc input))
-        (and acc (= nil input))
+        (~= nil acc)
         (if (= 0 items)
             fallback
             (/ acc items))
         0)))
+
+(fn first [fallback]
+  "Yield the first value of the transduction, or the `fallback` if there were none.
+
+```fennel
+(assert (= 6 (transduce (filter #(= 0 (% $1 2))) (first 0) [1 3 5 6 9])))
+```"
+  (fn [acc input]
+    (if (and (~= nil acc) (~= nil input)) (reduced input)
+        (~= nil acc) acc
+        fallback)))
+
+(fn last [fallback]
+  "Yield the final value of the transduction, or the `fallback` if there were none.
+
+```fennel
+(assert (= 10 (transduce pass (last 0) [2 4 6 7 10])))
+```"
+  (fn [acc input]
+    (if (and (~= nil acc) (~= nil input)) input
+        (~= nil acc) acc
+        fallback)))
 
 (fn table.= [a b]
   "Recursively determine if two tables are equal, non-Baker style."
@@ -598,6 +620,8 @@ transduction (thus protecting from division-by-zero).
  :mul mul
  :all all
  :any any
+ :first first
+ :last last
  ;; --- Utilities --- ;;
  :comp comp
  :reduced reduced
