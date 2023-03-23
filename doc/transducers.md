@@ -16,6 +16,7 @@
 - [`filter`](#filter)
 - [`filter-map`](#filter-map)
 - [`first`](#first)
+- [`fold`](#fold)
 - [`group-by`](#group-by)
 - [`intersperse`](#intersperse)
 - [`last`](#last)
@@ -232,6 +233,27 @@ Yield the first value of the transduction, or the `fallback` if there were none.
 
 ```fennel
 (assert (= 6 (transduce (filter #(= 0 (% $1 2))) (first 0) [1 3 5 6 9])))
+```
+
+## `fold`
+Function signature:
+
+```
+(fold f seed)
+```
+
+The fundamental reducer. [`fold`](#fold) creates an ad-hoc reducer based on
+a given 2-argument function. A SEED is also required as the initial accumulator
+value, which also becomes the return value in case there were no input left in
+the transduction.
+
+Functions like `+' and `*' are automatically valid reducers, because they yield
+sane values even when given 0 or 1 arguments. Other functions like `max` cannot
+be used as-is as reducers since they require at least 2 arguments. For functions
+like this, [`fold`](#fold) is appropriate.
+
+```fennel
+(assert (= 1000 (transduce pass (fold math.max 0) [1 2 3 4 1000 5 6])))
 ```
 
 ## `group-by`
