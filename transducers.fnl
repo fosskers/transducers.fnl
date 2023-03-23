@@ -16,16 +16,8 @@
     (let [z fs]
       (fn [arg] (z (g arg))))))
 
-(fn id [item]
-  "The identity function. Yields what it was given.
-
-```fennel
-(assert (= 5 (id 5)))
-```"
-  item)
-
 (fn unreduce [tbl]
-  "Unwrap a reduced value."
+  "Unwrap a reduced value `tbl`."
   (. tbl :reduced))
 
 (fn reduced [item]
@@ -35,13 +27,13 @@ the final result."
 
 (fn reduced? [tbl]
   "Has a transduction been short-circuited? This tests the given `tbl` for a
-certain shape produced by the `reduced` function, which itself is only called
-within transducers that have the concept of short-circuiting, like `take`.
+certain shape produced by the `reduced' function, which itself is only called
+within transducers that have the concept of short-circuiting, like `take'.
 
 ```fennel
 (assert (not (reduced? [1])))
-(assert (reduced? {:reduced 1}))
-(assert (reduced? {:reduced false}))
+(assert (reduced? (reduced 1)))
+(assert (reduced? (reduced false)))
 ```"
   (and (= :table (type tbl))
        (~= nil (unreduce tbl))))
@@ -64,7 +56,7 @@ within transducers that have the concept of short-circuiting, like `take`.
   "The entry point for processing a data source via transducer functions. It
 accepts:
 
-- `xform`: a chain of composed transducer functions, like `map` and `filter`.
+- `xform`: a chain of composed transducer functions, like `map' and `filter'.
 - `reducer`: a reducer function to \"collect\" or \"fold\" all the final elements together.
 - `source`: a potentially infinite source of data (but usually a table).
 - `...`: any number of additional sources.
@@ -86,7 +78,7 @@ arguments described above. To use them:
 
 Fennel already supplies `each`, `collect`, and `accumulate`, so if we could only
 do one transformation at a time then Transducers wouldn't be useful. Luckily
-Transducers can be composed:
+Transducers can be composed with `comp':
 
 ```fennel
 (let [res (transduce (comp (filter-map #(. $1 1))
@@ -116,7 +108,7 @@ analogous to how `zip` works in many languages. For example:
   (assert (table.= [5 7 9] res)))
 ```
 
-Notice that the function passed to `map` can be of any arity to accomodate this."
+Notice that the function passed to `map' can be of any arity to accomodate this."
   (let [init (reducer)
         xf (xform reducer)
         result (reduce xf init source ...)]
@@ -129,7 +121,10 @@ Notice that the function passed to `map` can be of any arity to accomodate this.
 
 ```fennel
 (assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
-```"
+```
+
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument."
   (fn [result input]
     (if (~= nil input)
         (reducer result input)
@@ -252,7 +247,10 @@ any element fails the test.
 ```fennel
 (let [res (transduce enumerate cons [\"a\" \"b\" \"c\"])]
   (assert (table.= [[1 \"a\"] [2 \"b\"] [3 \"c\"]] res)))
-```"
+```
+
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument."
   (var n 1)
   (fn [result input]
     (if (~= nil input)
@@ -287,7 +285,10 @@ any element fails the test.
 ```fennel
 (assert (table.= [1 2 3 4 5 6] (transduce concat cons [[1 2] [3 4] [5 6]])))
 (assert (table.= [1 2 3] (transduce (comp concat (take 3)) cons [[1 2] [3 4] [5 6]])))
-```"
+```
+
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument."
   (fn [result input]
     (if (~= nil input)
         (accumulate [r result _ i (ipairs input) &until (reduced? r)]
@@ -326,7 +327,7 @@ accumulated state, which may be shorter than `n`.
                 (reducer final)))))))
 
 (fn window [n]
-  "Yield `n`-length windows of overlapping values. This is different from `segment`
+  "Yield `n`-length windows of overlapping values. This is different from `segment'
 which yields non-overlapping windows. If there were fewer items in the input
 than `n`, then this yields nothing.
 
@@ -390,7 +391,10 @@ you're not careful.
 ```fennel
 (let [res (transduce unique cons [1 2 1 3 2 1 2 \"abc\"])]
   (assert (table.= [1 2 3 \"abc\"] res)))
-```"
+```
+
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument."
   (let [seen {}]
     (fn [result input]
       (if (~= nil input)
@@ -406,7 +410,10 @@ you're not careful.
 ```fennel
 (let [res (transduce dedup cons [1 1 1 2 2 2 3 3 3 4 3 3])]
   (assert (table.= [1 2 3 4 3] res)))
-```"
+```
+
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument."
   (var prev :nothing)
   (fn [result input]
     (if (~= nil input)
@@ -469,7 +476,10 @@ through the transduction.
 
 ```fennel
 (assert (= 4 (transduce pass count [1 2 3 4])))
-```"
+```
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments."
   (if (and (~= nil acc) (~= nil input)) (+ 1 acc)
       (~= nil acc) acc
       0))
@@ -480,7 +490,10 @@ transduction.
 
 ```fennel
 (assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
-```"
+```
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments."
   (if (and (~= nil acc) (~= nil input)) (do (table.insert acc input) acc)
       (~= nil acc) acc
       []))
@@ -607,7 +620,7 @@ least 1 argument. For functions like this, `fold` is appropriate.
   "Recursively determine if two tables are equal, non-Baker style."
   (match (type a)
     :table (and (= (length a) (length b))
-                (transduce (map table.=) (all id) a b))
+                (transduce (map table.=) (all (fn [x] x)) a b))
     _ (= a b)))
 
 {:transduce transduce
@@ -643,4 +656,5 @@ least 1 argument. For functions like this, `fold` is appropriate.
  ;; --- Utilities --- ;;
  :comp comp
  :reduced reduced
- :reduced? reduced?}
+ :reduced? reduced?
+ :unreduce unreduce}

@@ -1,0 +1,7 @@
+{:modules-info
+ {"transducers.fnl"
+  {:name "Transducers"
+   :version "0.1.0"
+   :description "Ergonomic, efficient data processing."
+   :license "GPLv3"}}}
+

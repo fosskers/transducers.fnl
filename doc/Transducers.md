@@ -1,4 +1,5 @@
-# Transducers.fnl
+# Transducers (0.1.0)
+Ergonomic, efficient data processing.
 
 **Table of contents**
 
@@ -32,6 +33,7 @@
 - [`take-while`](#take-while)
 - [`transduce`](#transduce)
 - [`unique`](#unique)
+- [`unreduce`](#unreduce)
 - [`window`](#window)
 
 ## `add`
@@ -110,6 +112,9 @@ Concatenate all the subtables in the transduction.
 (assert (table.= [1 2 3] (transduce (comp concat (take 3)) cons [[1 2] [3 4] [5 6]])))
 ```
 
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument.
+
 ## `cons`
 Function signature:
 
@@ -124,6 +129,9 @@ transduction.
 (assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
 ```
 
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments.
+
 ## `count`
 Function signature:
 
@@ -136,6 +144,9 @@ Count the number of elements that made it through the transduction.
 ```fennel
 (assert (= 4 (transduce pass count [1 2 3 4])))
 ```
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments.
 
 ## `dedup`
 Function signature:
@@ -150,6 +161,9 @@ Remove adjecent duplicates from the transduction.
 (let [res (transduce dedup cons [1 1 1 2 2 2 3 3 3 4 3 3])]
   (assert (table.= [1 2 3 4 3] res)))
 ```
+
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument.
 
 ## `drop`
 Function signature:
@@ -193,6 +207,9 @@ Index every value passed through the transduction into a pair. Starts at 1.
 (let [res (transduce enumerate cons ["a" "b" "c"])]
   (assert (table.= [[1 "a"] [2 "b"] [3 "c"]] res)))
 ```
+
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument.
 
 ## `filter`
 Function signature:
@@ -339,6 +356,9 @@ Just pass along each value of the transduction without transforming.
 (assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
 ```
 
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument.
+
 ## `reduced`
 Function signature:
 
@@ -357,13 +377,13 @@ Function signature:
 ```
 
 Has a transduction been short-circuited? This tests the given `tbl` for a
-certain shape produced by the `reduced` function, which itself is only called
-within transducers that have the concept of short-circuiting, like `take`.
+certain shape produced by the [`reduced`](#reduced) function, which itself is only called
+within transducers that have the concept of short-circuiting, like [`take`](#take).
 
 ```fennel
 (assert (not (reduced? [1])))
-(assert (reduced? {:reduced 1}))
-(assert (reduced? {:reduced false}))
+(assert (reduced? (reduced 1)))
+(assert (reduced? (reduced false)))
 ```
 
 ## `scan`
@@ -450,7 +470,7 @@ Function signature:
 The entry point for processing a data source via transducer functions. It
 accepts:
 
-- `xform`: a chain of composed transducer functions, like `map` and `filter`.
+- `xform`: a chain of composed transducer functions, like [`map`](#map) and [`filter`](#filter).
 - `reducer`: a reducer function to "collect" or "fold" all the final elements together.
 - `source`: a potentially infinite source of data (but usually a table).
 - `...`: any number of additional sources.
@@ -472,7 +492,7 @@ arguments described above. To use them:
 
 Fennel already supplies `each`, `collect`, and `accumulate`, so if we could only
 do one transformation at a time then Transducers wouldn't be useful. Luckily
-Transducers can be composed:
+Transducers can be composed with [`comp`](#comp):
 
 ```fennel
 (let [res (transduce (comp (filter-map #(. $1 1))
@@ -502,7 +522,7 @@ analogous to how `zip` works in many languages. For example:
   (assert (table.= [5 7 9] res)))
 ```
 
-Notice that the function passed to `map` can be of any arity to accomodate this.
+Notice that the function passed to [`map`](#map) can be of any arity to accomodate this.
 
 ## `unique`
 Function signature:
@@ -520,6 +540,18 @@ you're not careful.
   (assert (table.= [1 2 3 "abc"] res)))
 ```
 
+**Note:** This takes a `reducer` as an argument, but as seen in the example,
+this function is expected to be passed plain, without any argument.
+
+## `unreduce`
+Function signature:
+
+```
+(unreduce tbl)
+```
+
+Unwrap a reduced value `tbl`.
+
 ## `window`
 Function signature:
 
@@ -527,7 +559,7 @@ Function signature:
 (window n)
 ```
 
-Yield `n`-length windows of overlapping values. This is different from `segment`
+Yield `n`-length windows of overlapping values. This is different from [`segment`](#segment)
 which yields non-overlapping windows. If there were fewer items in the input
 than `n`, then this yields nothing.
 
@@ -535,6 +567,11 @@ than `n`, then this yields nothing.
 (let [res (transduce (window 3) cons [1 2 3 4 5])]
   (assert (table.= [[1 2 3] [2 3 4] [3 4 5]] res)))
 ```
+
+
+---
+
+License: GPLv3
 
 
 <!-- Generated with Fenneldoc v1.0.0
