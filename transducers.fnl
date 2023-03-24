@@ -681,7 +681,12 @@ all CSV data that made it through the transduction.
     (f:write (.. (table.concat headers ",") "\n"))
     (fn [acc input]
       (if (and (~= nil acc) (~= nil input))
-          (-> (icollect [_ k (ipairs headers)] (. input k))
+          (-> (icollect [_ k (ipairs headers)]
+                (let [val (. input k)]
+                  (match (type val)
+                    :string val
+                    :number (tostring val)
+                    :boolean (tostring val))))
               (table.concat ",")
               (.. "\n")
               (f:write))
