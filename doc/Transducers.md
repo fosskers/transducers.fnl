@@ -24,6 +24,7 @@ Ergonomic, efficient data processing.
 - [`fold`](#fold)
 - [`group-by`](#group-by)
 - [`intersperse`](#intersperse)
+- [`ints`](#ints)
 - [`iter`](#iter)
 - [`keyed`](#keyed)
 - [`last`](#last)
@@ -364,6 +365,22 @@ Insert an `elem` between each value of the transduction.
 ```fennel
 (assert (table.= [1] (transduce (intersperse 0) cons [1])))
 (assert (table.= [1 0 2 0 3] (transduce (intersperse 0) cons [1 2 3])))
+```
+
+## `ints`
+Function signature:
+
+```
+(ints start ?step)
+```
+
+Yield all integers, beginning with `start` and advancing by an optional `?step`
+which can be positive or negative. If you only want a specific range within the
+transduction, then use [`take-while`](#take-while) within your transducer chain.
+
+```fennel
+(assert (table.= [1 2 3 4 5] (transduce (take 5) cons (ints 1))))
+(assert (table.= [1 0 -1 -2 -3] (transduce (take 5) cons (ints 1 -1))))
 ```
 
 ## `iter`

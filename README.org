@@ -26,7 +26,7 @@ Transducers...
   - [[#importing][Importing]]
   - [[#transducers-reducers-and-sources][Transducers, Reducers, and Sources]]
   - [[#processing-csv-data][Processing CSV Data]]
-  - [[#api][API]]
+- [[#api][API]]
 - [[#performance][Performance]]
 
 * History and Motivation
@@ -126,7 +126,7 @@ To reduce the file to certain fields and write the data back out:
              (t.csv-read "in.csv"))
 #+end_src
 
-** API
+* API
 
 [[file:doc/Transducers.md][See here.]]
 * Performance

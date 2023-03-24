@@ -764,6 +764,23 @@ of the file as key-value Tables.
              (set ix (+ 1 ix)))
          yield))}))
 
+(lambda ints [start ?step]
+  "Yield all integers, beginning with `start` and advancing by an optional `?step`
+which can be positive or negative. If you only want a specific range within the
+transduction, then use `take-while' within your transducer chain.
+
+```fennel
+(assert (table.= [1 2 3 4 5] (transduce (take 5) cons (ints 1))))
+(assert (table.= [1 0 -1 -2 -3] (transduce (take 5) cons (ints 1 -1))))
+```"
+  (var curr start)
+  (let [step (or ?step 1)]
+    {:transducers-gen
+     (fn []
+       (let [old curr]
+         (set curr (+ curr step))
+         old))}))
+
 ;; --- Misc. --- ;;
 
 (fn table.= [a b]
@@ -810,6 +827,7 @@ of the file as key-value Tables.
  :file file
  :repeat repeat
  :cycle cycle
+ :ints ints
  :csv-read csv-read
  ;; --- Utilities --- ;;
  :comp comp
