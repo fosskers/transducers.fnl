@@ -18,3 +18,43 @@ Transducers...
 - aren't tied to any specific data type; they need only be implemented once.
 - vastly simplify "data transformation code".
 - are a joy to use!
+
+* Table of Contents :toc_2_gh:
+- [[#history-and-motivation][History and Motivation]]
+- [[#installation][Installation]]
+- [[#usage][Usage]]
+  - [[#importing][Importing]]
+- [[#api][API]]
+
+* History and Motivation
+
+Originally invented in Clojure and adapted to Scheme as SRFI-171, Transducers
+are an excellent way to think about - and efficiently operate on - collections
+or streams of data. Transduction operations are strict and don't involve
+"laziness" or "thunking" in any way, yet only process the exact amount of data
+you ask them to.
+
+This library is modelled after [[https://github.com/fosskers/cl-transducers][the Common Lisp implementation]], which was itself
+inspired by the original Clojure and SRFI-171.
+
+* Installation
+
+This library consists of only a single module, so it's simple to vendor into
+your own projects.
+
+* Usage
+
+** Importing
+
+#+begin_src fennel
+(local t (require :transducers))
+
+(t.transduce (t.take 3) t.add [1 2 3 4 5])
+#+end_src
+
+#+RESULTS:
+: 6
+
+* API
+
+[[file:doc/Transducers.md][See here.]]
