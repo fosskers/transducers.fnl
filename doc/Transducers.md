@@ -10,6 +10,8 @@ Ergonomic, efficient data processing.
 - [`concat`](#concat)
 - [`cons`](#cons)
 - [`count`](#count)
+- [`csv-read`](#csv-read)
+- [`csv-write`](#csv-write)
 - [`dedup`](#dedup)
 - [`drop`](#drop)
 - [`drop-while`](#drop-while)
@@ -21,6 +23,8 @@ Ergonomic, efficient data processing.
 - [`fold`](#fold)
 - [`group-by`](#group-by)
 - [`intersperse`](#intersperse)
+- [`iter`](#iter)
+- [`keyed`](#keyed)
 - [`last`](#last)
 - [`map`](#map)
 - [`mul`](#mul)
@@ -148,6 +152,35 @@ Count the number of elements that made it through the transduction.
 
 **Note:** This takes `acc` and `input` arguments, but as seen in the example,
 this function is expected to be passed plain, without any arguments.
+
+## `csv-read`
+Function signature:
+
+```
+(csv-read path)
+```
+
+Given a `path` to a CSV file, create a Transducer Source that yields all lines
+of the file as key-value Tables.
+
+```fennel
+(transduce pass count (csv-read "data.csv"))
+```
+
+## `csv-write`
+Function signature:
+
+```
+(csv-write path headers)
+```
+
+Given a `path` to write to and a table of `headers` (fields) to keep, write
+all CSV data that made it through the transduction.
+
+```fennel
+(transduce pass (csv-write "names.csv" ["Name"])
+                (csv-read "data.csv"))
+```
 
 ## `dedup`
 Function signature:
@@ -317,6 +350,34 @@ Insert an `elem` between each value of the transduction.
 (assert (table.= [1] (transduce (intersperse 0) cons [1])))
 (assert (table.= [1 0 2 0 3] (transduce (intersperse 0) cons [1 2 3])))
 ```
+
+## `iter`
+Function signature:
+
+```
+(iter iterator)
+```
+
+Given any `iterator`, create a Transducer Source that yields all of its input.
+
+```fennel
+(let [res (transduce pass cons (iter (string.gmatch "hello,world,cats" "[^,]+")))]
+  (assert (table.= ["hello" "world" "cats"] res)))
+```
+
+## `keyed`
+Function signature:
+
+```
+(keyed acc input)
+```
+
+Build up a key-value Table of all elements that made it through the
+transduction. The input values can be key-value tables of any size; they will be
+fused into a single result.
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments.
 
 ## `last`
 Function signature:

@@ -16,6 +16,19 @@
     (let [z fs]
       (fn [arg] (z (g arg))))))
 
+(fn split-into-table [line]
+  "Split a CSV line into a table of values."
+  (icollect [s (string.gmatch line "[^,]+")] s))
+
+(fn fuse [keys vals]
+  "Fuse the elements of two sequential tables into a single key-value table."
+  (when (~= (length keys) (length vals))
+    (error "Lengths of key and value tables do not match!"))
+  (collect [i k (ipairs keys)]
+    k (. vals i)))
+
+;; --- Entry Points --- ;;
+
 (fn unreduce [tbl]
   "Unwrap a reduced value `tbl`."
   (. tbl :transducers-reduced))
@@ -52,18 +65,33 @@ within transducers that have the concept of short-circuiting, like `take'.
                 (recurse acc (+ 1 i))))))
     (recurse id 1)))
 
+(fn iter-reduce [f id iterator]
+  "Reduce over the contents of a Lua iterator."
+  (let [acc (accumulate [acc id item iterator &until (reduced? acc)]
+              (f acc item))]
+    (if (reduced? acc)
+        (unreduce acc)
+        acc)))
+
 (fn file-reduce [f id path]
   "Reduce over all the lines of a file."
   (with-open [file (io.open path)]
-    (fn recurse [acc]
-      (let [line (file:read "*line")]
-        (if (not line)
-            acc
-            (let [new (f acc line)]
-              (if (reduced? new)
-                  (unreduce new)
-                  (recurse new))))))
-    (recurse id)))
+    (iter-reduce f id (file:lines))))
+
+(fn csv-reduce [f id path]
+  "Reduce over all the lines of a CSV file."
+  (with-open [file (io.open path)]
+    (let [headers (split-into-table (file:read "*line"))]
+      (fn recurse [acc]
+        (let [line (file:read "*line")]
+          (if (= nil line)
+              acc
+              (let [tbl (fuse headers (split-into-table line))
+                    acc (f acc tbl)]
+                (if (reduced? acc)
+                    (unreduce acc)
+                    (recurse acc))))))
+      (recurse id))))
 
 (lambda transduce [xform reducer source ...]
   "The entry point for processing a data source via transducer functions. It
@@ -125,8 +153,10 @@ Notice that the function passed to `map' can be of any arity to accomodate this.
   (let [init (reducer)
         xf (xform reducer)
         result (match source
+                 {:transducers-iter iterator} (iter-reduce xf init iterator)
                  {:transducers-file path} (file-reduce xf init path)
-                 _ (table-reduce xf init source ...))]
+                 {:transducers-csv path} (csv-reduce xf init path)
+                 [] (table-reduce xf init source ...))]
     (xf result)))
 
 ;; --- Transducers --- ;;
@@ -513,6 +543,21 @@ this function is expected to be passed plain, without any arguments."
       (~= nil acc) acc
       []))
 
+(fn keyed [acc input]
+  "Build up a key-value Table of all elements that made it through the
+transduction. The input values can be key-value tables of any size; they will be
+fused into a single result.
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments."
+  (if (and (~= nil acc) (~= nil input))
+      (do (each [key value (pairs input)] (tset acc key value))
+          acc)
+      (~= nil acc) acc
+      {}))
+
+;; (transduce (map (fn [s] {s (length s)})) keyed ["cats" "Hello" "there" "cats"])
+
 (fn add [a b]
   "Add two numbers `a` and `b`. Unlike the normal `+`, this can be passed to
 higher-order functions and behaves as a legal reducer.
@@ -614,6 +659,27 @@ transduction (thus protecting from division-by-zero).
         (~= nil acc) acc
         fallback)))
 
+(fn csv-write [path headers]
+  "Given a `path` to write to and a table of `headers` (fields) to keep, write
+all CSV data that made it through the transduction.
+
+```fennel :skip-test
+(transduce pass (csv-write \"names.csv\" [\"Name\"])
+                (csv-read \"data.csv\"))
+```"
+  (let [f (assert (io.open path :w))]
+    (f:write (.. (table.concat headers ",") "\n"))
+    (fn [acc input]
+      (if (and (~= nil acc) (~= nil input))
+          (-> (icollect [_ k (ipairs headers)] (. input k))
+              (table.concat ",")
+              (.. "\n")
+              (f:write))
+          (~= nil acc) (do (f:flush)
+                           (f:close)
+                           true)
+          true))))
+
 (fn fold [f seed]
   "The fundamental reducer. `fold` creates an ad-hoc reducer based on
 a given 2-argument function `f`. A `seed` is also required as the initial
@@ -643,6 +709,24 @@ To count the lines of a file:
 (transduce pass count (file \"README.org\"))
 ```"
   {:transducers-file path})
+
+(fn csv-read [path]
+  "Given a `path` to a CSV file, create a Transducer Source that yields all lines
+of the file as key-value Tables.
+
+```fennel :skip-test
+(transduce pass count (csv-read \"data.csv\"))
+```"
+  {:transducers-csv path})
+
+(fn iter [iterator]
+  "Given any `iterator`, create a Transducer Source that yields all of its input.
+
+```fennel
+(let [res (transduce pass cons (iter (string.gmatch \"hello,world,cats\" \"[^,]+\")))]
+  (assert (table.= [\"hello\" \"world\" \"cats\"] res)))
+```"
+  {:transducers-iter iterator})
 
 ;; --- Misc. --- ;;
 
@@ -676,6 +760,7 @@ To count the lines of a file:
  ;; --- Reducers --- ;;
  :count count
  :cons cons
+ :keyed keyed
  :fold fold
  :add add
  :mul mul
@@ -683,8 +768,11 @@ To count the lines of a file:
  :any any
  :first first
  :last last
+ :csv-write csv-write
  ;; --- Sources --- ;;
+ :iter iter
  :file file
+ :csv-read csv-read
  ;; --- Utilities --- ;;
  :comp comp
  :reduced reduced
