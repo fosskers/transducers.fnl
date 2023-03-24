@@ -78,6 +78,15 @@ within transducers that have the concept of short-circuiting, like `take'.
   (with-open [file (io.open path)]
     (iter-reduce f id (file:lines))))
 
+(fn generator-reduce [f id gen]
+  "Reduce over some endless generator of values."
+  (fn recurse [acc]
+    (let [acc (f acc (gen))]
+      (if (reduced? acc)
+          (unreduce acc)
+          (recurse acc))))
+  (recurse id))
+
 (fn csv-reduce [f id path]
   "Reduce over all the lines of a CSV file."
   (with-open [file (io.open path)]
@@ -155,6 +164,7 @@ Notice that the function passed to `map' can be of any arity to accomodate this.
         result (match source
                  {:transducers-iter iterator} (iter-reduce xf init iterator)
                  {:transducers-file path} (file-reduce xf init path)
+                 {:transducers-gen gen} (generator-reduce xf init gen)
                  {:transducers-csv path} (csv-reduce xf init path)
                  [] (table-reduce xf init source ...))]
     (xf result)))
@@ -728,6 +738,14 @@ of the file as key-value Tables.
 ```"
   {:transducers-iter iterator})
 
+(fn repeat [item]
+  "Endlessly yiled a given `item`.
+
+```fennel
+(assert (table.= [5 5 5] (transduce (take 3) cons (repeat 5))))
+```"
+  {:transducers-gen (fn [] item)})
+
 ;; --- Misc. --- ;;
 
 (fn table.= [a b]
@@ -772,6 +790,7 @@ of the file as key-value Tables.
  ;; --- Sources --- ;;
  :iter iter
  :file file
+ :repeat repeat
  :csv-read csv-read
  ;; --- Utilities --- ;;
  :comp comp

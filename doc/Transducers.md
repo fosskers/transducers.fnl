@@ -31,6 +31,7 @@ Ergonomic, efficient data processing.
 - [`pass`](#pass)
 - [`reduced`](#reduced)
 - [`reduced?`](#reduced-1)
+- [`repeat`](#repeat)
 - [`scan`](#scan)
 - [`segment`](#segment)
 - [`step`](#step)
@@ -462,6 +463,19 @@ within transducers that have the concept of short-circuiting, like [`take`](#tak
 (assert (not (reduced? [1])))
 (assert (reduced? (reduced 1)))
 (assert (reduced? (reduced false)))
+```
+
+## `repeat`
+Function signature:
+
+```
+(repeat item)
+```
+
+Endlessly yiled a given `item`.
+
+```fennel
+(assert (table.= [5 5 5] (transduce (take 3) cons (repeat 5))))
 ```
 
 ## `scan`
