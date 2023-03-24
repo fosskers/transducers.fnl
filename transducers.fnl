@@ -10,7 +10,7 @@
 (let [f (comp #(+ 1 $1) #(length $1))]
   (assert (= 4 (f \"foo\"))))
 ```"
-  (accumulate [fs f _ g (ipairs (table.pack ...))]
+  (accumulate [fs f _ g (ipairs [...])]
     ;; This let is necessary to prevent an infinite loop involving strange
     ;; binding semantics!
     (let [z fs]
@@ -52,7 +52,7 @@ within transducers that have the concept of short-circuiting, like `take'.
        (~= nil (unreduce tbl))))
 
 (fn table-reduce [f id tbl ...]
-  (let [tables (table.pack ...)
+  (let [tables [...]
         len (accumulate [shortest (length tbl) _ t (ipairs tables)]
               (math.min shortest (length t)))]
     (fn recurse [acc i]
