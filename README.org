@@ -140,3 +140,5 @@ Summing a numeric field in a 45mb CSV file.
 | LuaJIT  |               1.38 |
 | Lua 5.4 |               2.56 |
 | Lua 5.2 |               3.03 |
+
+# Rust: 240ms
