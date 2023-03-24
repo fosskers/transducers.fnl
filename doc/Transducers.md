@@ -12,6 +12,7 @@ Ergonomic, efficient data processing.
 - [`count`](#count)
 - [`csv-read`](#csv-read)
 - [`csv-write`](#csv-write)
+- [`cycle`](#cycle)
 - [`dedup`](#dedup)
 - [`drop`](#drop)
 - [`drop-while`](#drop-while)
@@ -181,6 +182,19 @@ all CSV data that made it through the transduction.
 ```fennel
 (transduce pass (csv-write "names.csv" ["Name"])
                 (csv-read "data.csv"))
+```
+
+## `cycle`
+Function signature:
+
+```
+(cycle tbl)
+```
+
+Given a `tbl`, endlessly yields its elements.
+
+```fennel
+(assert (table.= [1 2 3 1 2] (transduce (take 5) cons (cycle [1 2 3]))))
 ```
 
 ## `dedup`
@@ -472,7 +486,7 @@ Function signature:
 (repeat item)
 ```
 
-Endlessly yiled a given `item`.
+Endlessly yield a given `item`.
 
 ```fennel
 (assert (table.= [5 5 5] (transduce (take 3) cons (repeat 5))))

@@ -739,12 +739,30 @@ of the file as key-value Tables.
   {:transducers-iter iterator})
 
 (fn repeat [item]
-  "Endlessly yiled a given `item`.
+  "Endlessly yield a given `item`.
 
 ```fennel
 (assert (table.= [5 5 5] (transduce (take 3) cons (repeat 5))))
 ```"
   {:transducers-gen (fn [] item)})
+
+(fn cycle [tbl]
+  "Given a `tbl`, endlessly yields its elements.
+
+```fennel
+(assert (table.= [1 2 3 1 2] (transduce (take 5) cons (cycle [1 2 3]))))
+```"
+  (let [len (length tbl)]
+    (when (< (length tbl) 1)
+      (error "Cannot cycle an empty table."))
+    (var ix 1)
+    {:transducers-gen
+     (fn []
+       (let [yield (. tbl ix)]
+         (if (= ix len)
+             (set ix 1)
+             (set ix (+ 1 ix)))
+         yield))}))
 
 ;; --- Misc. --- ;;
 
@@ -791,6 +809,7 @@ of the file as key-value Tables.
  :iter iter
  :file file
  :repeat repeat
+ :cycle cycle
  :csv-read csv-read
  ;; --- Utilities --- ;;
  :comp comp
