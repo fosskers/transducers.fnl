@@ -101,6 +101,7 @@ Two things of note here:
    composed transducer chain is immediately added to an internal accumulator.
 
 Explore the other transducers and reducers to see what's possible!
+
 ** Processing CSV Data
 
 As a convenience, this library also exposes a simple interface for reading and
@@ -129,4 +130,13 @@ To reduce the file to certain fields and write the data back out:
 * API
 
 [[file:doc/Transducers.md][See here.]]
+
 * Performance
+
+Summing a numeric field in a 45mb CSV file.
+
+| Runtime | Average Time (sec) |
+|---------+--------------------|
+| LuaJIT  |               1.38 |
+| Lua 5.4 |               2.56 |
+| Lua 5.2 |               3.03 |
