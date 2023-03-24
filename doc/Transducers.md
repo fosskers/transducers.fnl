@@ -6,6 +6,7 @@ Ergonomic, efficient data processing.
 - [`add`](#add)
 - [`all`](#all)
 - [`any`](#any)
+- [`average`](#average)
 - [`comp`](#comp)
 - [`concat`](#concat)
 - [`cons`](#cons)
@@ -88,6 +89,21 @@ the transduction as soon as the condition is met.
 ```fennel
 (assert (not (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7])))
 (assert (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7 2]))
+```
+
+## `average`
+Function signature:
+
+```
+(average fallback)
+```
+
+Calculate the average value of all numeric elements in a transduction. A
+`fallback` must be provided in case no elements made it through the
+transduction (thus protecting from division-by-zero).
+
+```fennel
+(assert (= 3.0 (transduce pass (average -1) [1 2 3 4 5])))
 ```
 
 ## `comp`

@@ -817,6 +817,7 @@ transduction, then use `take-while' within your transducer chain.
  :fold fold
  :add add
  :mul mul
+ :average average
  :all all
  :any any
  :first first
