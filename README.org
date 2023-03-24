@@ -24,7 +24,10 @@ Transducers...
 - [[#installation][Installation]]
 - [[#usage][Usage]]
   - [[#importing][Importing]]
-- [[#api][API]]
+  - [[#transducers-reducers-and-sources][Transducers, Reducers, and Sources]]
+  - [[#processing-csv-data][Processing CSV Data]]
+  - [[#api][API]]
+- [[#performance][Performance]]
 
 * History and Motivation
 
@@ -52,9 +55,78 @@ your own projects.
 (t.transduce (t.take 3) t.add [1 2 3 4 5])
 #+end_src
 
-#+RESULTS:
-: 6
+** Transducers, Reducers, and Sources
 
-* API
+#+begin_src fennel
+;; The fundamental pattern.
+(t.transduce <transducer-chain> <reducer> <source>)
+#+end_src
+
+Data processing largely has three concerns:
+
+1. Where is my data coming from? (sources)
+2. What do I want to do to each element? (transducers)
+3. How do I want to collect the results? (reducers)
+
+Each full "transduction" requires all three. We pass one of each to the
+=transduce= function, which drives the process. It knows how to pull values from
+the source, feed them through the transducer chain, and wrap everything together
+via the reducer.
+
+- Typical transducers are =map=, =filter=, and =take=.
+- Typical reducers are =add=, =count=, and =fold=.
+- Typical sources are tables and files.
+
+/Generators/ are a special kind of source that yield infinite data. Typical
+generators are =repeat= and =cycle=.
+
+Let's sum the squares of the first 1000 even integers:
+
+#+begin_src fennel
+(t.transduce
+ (t.comp (t.filter #(= 0 (% $1 2))) ;; (2) Keep only even numbers.
+         (t.take 1000)              ;; (3) Keep the first 1000 filtered evens.
+         (t.map (fn [n] (* n n))))  ;; (4) Square those 1000.
+ t.add       ;; (5) Reducer: Add up all the squares.
+ (t.ints 1)) ;; (1) Source: Generate all positive integers.
+#+end_src
+
+Two things of note here:
+
+1. =comp= is used here to chain together different transducer steps. Notice that
+   the order appears "backwards" from usual function composition. It may help to
+   image that =comp= is acting like the =->>= macro here.
+2. The reduction via =add= is listed as Step 5, but really it's occuring
+   throughout the transduction process. Each value that makes it through the
+   composed transducer chain is immediately added to an internal accumulator.
+
+Explore the other transducers and reducers to see what's possible!
+** Processing CSV Data
+
+As a convenience, this library also exposes a simple interface for reading and
+writing streams of CSV data.
+
+To sum the values of a particular field:
+
+#+begin_src fennel
+(local t (require :transducers))
+
+(t.transduce (t.comp (t.filter-map #(. $1 :Age))
+                     (t.filter-map tonumber))
+             t.add (t.csv-read "foo.csv"))
+#+end_src
+
+To reduce the file to certain fields and write the data back out:
+
+#+begin_src fennel
+(local t (require :transducers))
+
+(t.transduce t.pass
+             (t.csv-write "out.csv" ["Name" "Age"])
+             (t.csv-read "in.csv"))
+#+end_src
+
+** API
 
 [[file:doc/Transducers.md][See here.]]
+* Performance
