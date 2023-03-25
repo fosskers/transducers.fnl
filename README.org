@@ -141,4 +141,10 @@ Summing a numeric field in a 45mb CSV file.
 | Lua 5.4 |               2.56 |
 | Lua 5.2 |               3.03 |
 
+The associated code can be found [[file:examples/big-csv-reading.fnl][in the examples folder]], alongside a
+hand-written version using only Fennel primitives. Interestingly, this
+hand-written version performs slightly worse, implying that the overhead from
+Transducers themselves is minimal.
+
 # Rust: 240ms
+# Hand-written Fennel (LuaJIT): 1.44s
