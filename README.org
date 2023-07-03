@@ -95,7 +95,7 @@ Two things of note here:
 
 1. =comp= is used here to chain together different transducer steps. Notice that
    the order appears "backwards" from usual function composition. It may help to
-   image that =comp= is acting like the =->>= macro here.
+   imagine that =comp= is acting like the =->>= macro here.
 2. The reduction via =add= is listed as Step 5, but really it's occuring
    throughout the transduction process. Each value that makes it through the
    composed transducer chain is immediately added to an internal accumulator.
