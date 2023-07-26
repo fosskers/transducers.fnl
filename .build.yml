@@ -1,6 +1,10 @@
 image: archlinux
+secrets:
+- 5c5bf3b5-a730-49d9-b46a-cb6baa48092d
 packages:
 - fennel
+- emacs-nox
+- jq
 sources:
 - https://git.sr.ht/~fosskers/transducers.fnl
 - https://gitlab.com/andreyorst/fenneldoc.git
@@ -11,3 +15,21 @@ tasks:
 - test: |
     cd transducers.fnl
     ~/fenneldoc/fenneldoc transducers.fnl
+- readme: |
+    cd transducers.fnl
+    emacs README.org --batch --eval "(setq org-html-head-include-default-style nil)" -f org-html-export-to-html --kill
+    sed -i '/<title>/d; /<\/title>/d' README.html
+- upload: |
+    cd transducers.fnl
+    set +x  # Avoid echoing the token
+    jq -sR '{
+        "query": "mutation UpdateRepo($id: Int!, $readme: String!) {
+          updateRepository(id: $id, input: { readme: $readme }) { id }
+        }", "variables": {
+          "id": 363616,
+          "readme": .
+        } }' < README.html \
+      | curl --oauth2-bearer $(cat ~/.readme-token) \
+        -H "Content-Type: application/json" \
+        -d@- https://git.sr.ht/query
+    echo "README Uploaded."
