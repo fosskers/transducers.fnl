@@ -1,0 +1,13 @@
+image: archlinux
+packages:
+- fennel
+sources:
+- https://git.sr.ht/~fosskers/transducers.fnl
+- https://gitlab.com/andreyorst/fenneldoc.git
+tasks:
+- fenneldoc: |
+    cd fenneldoc
+    make
+- test: |
+    cd transducers.fnl
+    ~/fenneldoc/fenneldoc transducers.fnl
