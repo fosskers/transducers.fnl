@@ -19,16 +19,16 @@ Transducers...
 - vastly simplify "data transformation code".
 - are a joy to use!
 
+Looking for Transducers in other Lisps? Check out the [[https://codeberg.org/fosskers/transducers.el][Emacs Lisp]] and [[https://codeberg.org/fosskers/cl-transducers][Common Lisp]]
+implementations!
+
 * History and Motivation
 
-Originally invented in Clojure and adapted to Scheme as SRFI-171, Transducers
-are an excellent way to think about - and efficiently operate on - collections
-or streams of data. Transduction operations are strict and don't involve
-"laziness" or "thunking" in any way, yet only process the exact amount of data
-you ask them to.
-
-This library is modelled after [[https://git.sr.ht/~fosskers/cl-transducers][the Common Lisp implementation]], which was itself
-inspired by the original Clojure and SRFI-171.
+Originally invented in Clojure and later adapted to other Lisps, Transducers are
+an excellent way to think about - and efficiently operate on - collections or
+streams of data. Transduction operations are strict and don't involve "laziness"
+or "thunking" in any way, yet only process the exact amount of data you ask them
+to.
 
 * Installation
 
