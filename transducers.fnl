@@ -59,7 +59,7 @@ within transducers that have the concept of short-circuiting, like `take'.
       (if (> i len)
           acc
           (let [vals (icollect [_ t (ipairs tables)] (. t i))
-                acc (f acc (. tbl i) (table.unpack vals))]
+                acc (f acc (. tbl i) ((or table.unpack _G.unpack) vals))]
             (if (reduced? acc)
                 (unreduce acc)
                 (recurse acc (+ 1 i))))))
