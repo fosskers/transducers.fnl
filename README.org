@@ -19,6 +19,9 @@ Transducers...
 - vastly simplify "data transformation code".
 - are a joy to use!
 
+Looking for Transducers in other Lisps? Check out the [[https://github.com/fosskers/cl-transducers][Common Lisp]] and [[https://github.com/fosskers/transducers.el][Emacs Lisp]]
+implementations!
+
 * Table of Contents :toc_2_gh:
 - [[#history-and-motivation][History and Motivation]]
 - [[#installation][Installation]]
@@ -36,9 +39,6 @@ are an excellent way to think about - and efficiently operate on - collections
 or streams of data. Transduction operations are strict and don't involve
 "laziness" or "thunking" in any way, yet only process the exact amount of data
 you ask them to.
-
-This library is modelled after [[https://github.com/fosskers/cl-transducers][the Common Lisp implementation]], which was itself
-inspired by the original Clojure and SRFI-171.
 
 * Installation
 
