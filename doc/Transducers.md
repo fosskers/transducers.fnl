@@ -5,7 +5,9 @@ Ergonomic, efficient data processing.
 
 - [`add`](#add)
 - [`all`](#all)
+- [`all?`](#all-1)
 - [`any`](#any)
+- [`any?`](#any-1)
 - [`average`](#average)
 - [`comp`](#comp)
 - [`concat`](#concat)
@@ -52,8 +54,8 @@ Function signature:
 (add a b)
 ```
 
-Add two numbers `a` and `b`. Unlike the normal `+`, this can be passed to
-higher-order functions and behaves as a legal reducer.
+Reducer: Add two numbers `a` and `b`. Unlike the normal `+`, this can be passed
+to higher-order functions and behaves as a legal reducer.
 
 ```fennel
 (assert (= 0 (add)))
@@ -68,12 +70,21 @@ Function signature:
 (all pred)
 ```
 
-Yield `true` if all elements of the transduction satisfy `pred`. Short-circuit
-with `false` if any element fails the test.
+Deprecated: Use [`all?`](#all-1) instead.
+
+## `all?`
+Function signature:
+
+```
+(all? pred)
+```
+
+Reducer: Yield `true` if all elements of the transduction satisfy `pred`.
+Short-circuit with `false` if any element fails the test.
 
 ```fennel
-(assert (transduce pass (all #(= 3 (length $1))) ["abc" "def" "ghi"]))
-(assert (not (transduce pass (all #(= 3 (length $1))) ["abc" "de" "ghi"])))
+(assert (transduce pass (all? #(= 3 (length $1))) ["abc" "def" "ghi"]))
+(assert (not (transduce pass (all? #(= 3 (length $1))) ["abc" "de" "ghi"])))
 ```
 
 ## `any`
@@ -83,12 +94,21 @@ Function signature:
 (any pred)
 ```
 
-Yield `true` if any element in the transduction satisfies `pred`. Short-circuits
-the transduction as soon as the condition is met.
+Deprecated: Use [`any?`](#any-1) instead.
+
+## `any?`
+Function signature:
+
+```
+(any? pred)
+```
+
+Reducer: Yield `true` if any element in the transduction satisfies `pred`.
+Short-circuits the transduction as soon as the condition is met.
 
 ```fennel
-(assert (not (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7])))
-(assert (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7 2]))
+(assert (not (transduce pass (any? #(= 0 (% $1 2))) [1 3 5 7])))
+(assert (transduce pass (any? #(= 0 (% $1 2))) [1 3 5 7 2]))
 ```
 
 ## `average`
@@ -98,8 +118,8 @@ Function signature:
 (average fallback)
 ```
 
-Calculate the average value of all numeric elements in a transduction. A
-`fallback` must be provided in case no elements made it through the
+Reducer: Calculate the average value of all numeric elements in a transduction.
+A `fallback` must be provided in case no elements made it through the
 transduction (thus protecting from division-by-zero).
 
 ```fennel
@@ -146,8 +166,8 @@ Function signature:
 (cons acc input)
 ```
 
-Build up a new sequential Table of all elements that made it through the
-transduction.
+Reducer: Build up a new sequential Table of all elements that made it through
+the transduction.
 
 ```fennel
 (assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
@@ -163,7 +183,7 @@ Function signature:
 (count acc input)
 ```
 
-Count the number of elements that made it through the transduction.
+Reducer: Count the number of elements that made it through the transduction.
 
 ```fennel
 (assert (= 4 (transduce pass count [1 2 3 4])))
@@ -179,8 +199,8 @@ Function signature:
 (csv-read path)
 ```
 
-Given a `path` to a CSV file, create a Transducer Source that yields all lines
-of the file as key-value Tables.
+Source: Given a `path` to a CSV file, create a Transducer Source that yields all
+lines of the file as key-value Tables.
 
 ```fennel
 (transduce pass count (csv-read "data.csv"))
@@ -193,8 +213,8 @@ Function signature:
 (csv-write path headers)
 ```
 
-Given a `path` to write to and a table of `headers` (fields) to keep, write
-all CSV data that made it through the transduction.
+Reducer: Given a `path` to write to and a table of `headers` (fields) to keep,
+write all CSV data that made it through the transduction.
 
 ```fennel
 (transduce pass (csv-write "names.csv" ["Name"])
@@ -208,7 +228,7 @@ Function signature:
 (cycle tbl)
 ```
 
-Given a `tbl`, endlessly yields its elements.
+Source: Given a `tbl`, endlessly yields its elements.
 
 ```fennel
 (assert (table.= [1 2 3 1 2] (transduce (take 5) cons (cycle [1 2 3]))))
@@ -284,8 +304,8 @@ Function signature:
 (file path)
 ```
 
-Given a `path`, create a Transducer Source that yields all the lines of its
-file.
+Source: Given a `path`, create a Transducer Source that yields all the lines of
+its file.
 
 To count the lines of a file:
 
@@ -328,7 +348,8 @@ Function signature:
 (first fallback)
 ```
 
-Yield the first value of the transduction, or the `fallback` if there were none.
+Reducer: Yield the first value of the transduction, or the `fallback` if there
+were none.
 
 ```fennel
 (assert (= 6 (transduce (filter #(= 0 (% $1 2))) (first 0) [1 3 5 6 9])))
@@ -390,9 +411,9 @@ Function signature:
 (ints start ?step)
 ```
 
-Yield all integers, beginning with `start` and advancing by an optional `?step`
-which can be positive or negative. If you only want a specific range within the
-transduction, then use [`take-while`](#take-while) within your transducer chain.
+Source: Yield all integers, beginning with `start` and advancing by an optional
+`?step` which can be positive or negative. If you only want a specific range
+within the transduction, then use [`take-while`](#take-while) within your transducer chain.
 
 ```fennel
 (assert (table.= [1 2 3 4 5] (transduce (take 5) cons (ints 1))))
@@ -406,7 +427,8 @@ Function signature:
 (iter iterator)
 ```
 
-Given any `iterator`, create a Transducer Source that yields all of its input.
+Source: Given any `iterator`, create a Transducer Source that yields all of its
+input.
 
 ```fennel
 (let [res (transduce pass cons (iter (string.gmatch "hello,world,cats" "[^,]+")))]
@@ -420,7 +442,7 @@ Function signature:
 (keyed acc input)
 ```
 
-Build up a key-value Table of all elements that made it through the
+Reducer: Build up a key-value Table of all elements that made it through the
 transduction. The input values can be key-value tables of any size; they will be
 fused into a single result.
 
@@ -434,7 +456,8 @@ Function signature:
 (last fallback)
 ```
 
-Yield the final value of the transduction, or the `fallback` if there were none.
+Reducer: Yield the final value of the transduction, or the `fallback` if there
+were none.
 
 ```fennel
 (assert (= 10 (transduce pass (last 0) [2 4 6 7 10])))
@@ -460,8 +483,8 @@ Function signature:
 (mul a b)
 ```
 
-Multiply two numbers `a` and `b`. Unlike the normal `*`, this can be passed to
-higher-order functions and behaves as a legal reducer.
+Reducer: Multiply two numbers `a` and `b`. Unlike the normal `*`, this can be
+passed to higher-order functions and behaves as a legal reducer.
 
 ```fennel
 (assert (= 1 (mul)))
@@ -519,7 +542,7 @@ Function signature:
 (repeat item)
 ```
 
-Endlessly yield a given `item`.
+Source: Endlessly yield a given `item`.
 
 ```fennel
 (assert (table.= [5 5 5] (transduce (take 3) cons (repeat 5))))

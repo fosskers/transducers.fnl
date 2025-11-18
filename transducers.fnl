@@ -527,7 +527,7 @@ through the transduction.
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
-  "Count the number of elements that made it through the transduction.
+  "Reducer: Count the number of elements that made it through the transduction.
 
 ```fennel
 (assert (= 4 (transduce pass count [1 2 3 4])))
@@ -540,8 +540,8 @@ this function is expected to be passed plain, without any arguments."
       0))
 
 (fn cons [acc input]
-  "Build up a new sequential Table of all elements that made it through the
-transduction.
+  "Reducer: Build up a new sequential Table of all elements that made it through
+the transduction.
 
 ```fennel
 (assert (table.= [1 2 3] (transduce pass cons [1 2 3])))
@@ -554,7 +554,7 @@ this function is expected to be passed plain, without any arguments."
       []))
 
 (fn keyed [acc input]
-  "Build up a key-value Table of all elements that made it through the
+  "Reducer: Build up a key-value Table of all elements that made it through the
 transduction. The input values can be key-value tables of any size; they will be
 fused into a single result.
 
@@ -569,8 +569,8 @@ this function is expected to be passed plain, without any arguments."
 ;; (transduce (map (fn [s] {s (length s)})) keyed ["cats" "Hello" "there" "cats"])
 
 (fn add [a b]
-  "Add two numbers `a` and `b`. Unlike the normal `+`, this can be passed to
-higher-order functions and behaves as a legal reducer.
+  "Reducer: Add two numbers `a` and `b`. Unlike the normal `+`, this can be passed
+to higher-order functions and behaves as a legal reducer.
 
 ```fennel
 (assert (= 0 (add)))
@@ -582,8 +582,8 @@ higher-order functions and behaves as a legal reducer.
       (+ a b)))
 
 (fn mul [a b]
-  "Multiply two numbers `a` and `b`. Unlike the normal `*`, this can be passed to
-higher-order functions and behaves as a legal reducer.
+  "Reducer: Multiply two numbers `a` and `b`. Unlike the normal `*`, this can be
+passed to higher-order functions and behaves as a legal reducer.
 
 ```fennel
 (assert (= 1 (mul)))
@@ -595,12 +595,16 @@ higher-order functions and behaves as a legal reducer.
       (* a b)))
 
 (fn all [pred]
-  "Yield `true` if all elements of the transduction satisfy `pred`. Short-circuit
-with `false` if any element fails the test.
+  "Deprecated: Use `all?' instead."
+  (all? pred))
+
+(fn all? [pred]
+  "Reducer: Yield `true` if all elements of the transduction satisfy `pred`.
+Short-circuit with `false` if any element fails the test.
 
 ```fennel
-(assert (transduce pass (all #(= 3 (length $1))) [\"abc\" \"def\" \"ghi\"]))
-(assert (not (transduce pass (all #(= 3 (length $1))) [\"abc\" \"de\" \"ghi\"])))
+(assert (transduce pass (all? #(= 3 (length $1))) [\"abc\" \"def\" \"ghi\"]))
+(assert (not (transduce pass (all? #(= 3 (length $1))) [\"abc\" \"de\" \"ghi\"])))
 ```"
   (fn [acc input]
     (if (and (not= nil acc) (not= nil input))
@@ -612,12 +616,16 @@ with `false` if any element fails the test.
       true)))
 
 (fn any [pred]
-  "Yield `true` if any element in the transduction satisfies `pred`. Short-circuits
-the transduction as soon as the condition is met.
+  "Deprecated: Use `any?' instead."
+  (any? pred))
+
+(fn any? [pred]
+  "Reducer: Yield `true` if any element in the transduction satisfies `pred`.
+Short-circuits the transduction as soon as the condition is met.
 
 ```fennel
-(assert (not (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7])))
-(assert (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7 2]))
+(assert (not (transduce pass (any? #(= 0 (% $1 2))) [1 3 5 7])))
+(assert (transduce pass (any? #(= 0 (% $1 2))) [1 3 5 7 2]))
 ```"
   (fn [acc input]
     (if (and (not= nil acc) (not= nil input))
@@ -629,8 +637,8 @@ the transduction as soon as the condition is met.
         false)))
 
 (fn average [fallback]
-  "Calculate the average value of all numeric elements in a transduction. A
-`fallback` must be provided in case no elements made it through the
+  "Reducer: Calculate the average value of all numeric elements in a transduction.
+A `fallback` must be provided in case no elements made it through the
 transduction (thus protecting from division-by-zero).
 
 ```fennel
@@ -648,7 +656,8 @@ transduction (thus protecting from division-by-zero).
         0)))
 
 (fn first [fallback]
-  "Yield the first value of the transduction, or the `fallback` if there were none.
+  "Reducer: Yield the first value of the transduction, or the `fallback` if there
+were none.
 
 ```fennel
 (assert (= 6 (transduce (filter #(= 0 (% $1 2))) (first 0) [1 3 5 6 9])))
@@ -659,7 +668,8 @@ transduction (thus protecting from division-by-zero).
         fallback)))
 
 (fn last [fallback]
-  "Yield the final value of the transduction, or the `fallback` if there were none.
+  "Reducer: Yield the final value of the transduction, or the `fallback` if there
+were none.
 
 ```fennel
 (assert (= 10 (transduce pass (last 0) [2 4 6 7 10])))
@@ -670,8 +680,8 @@ transduction (thus protecting from division-by-zero).
         fallback)))
 
 (fn csv-write [path headers]
-  "Given a `path` to write to and a table of `headers` (fields) to keep, write
-all CSV data that made it through the transduction.
+  "Reducer: Given a `path` to write to and a table of `headers` (fields) to keep,
+write all CSV data that made it through the transduction.
 
 ```fennel :skip-test
 (transduce pass (csv-write \"names.csv\" [\"Name\"])
@@ -715,8 +725,8 @@ least 1 argument. For functions like this, `fold` is appropriate.
 ;; --- Sources --- ;;
 
 (fn file [path]
-  "Given a `path`, create a Transducer Source that yields all the lines of its
-file.
+  "Source: Given a `path`, create a Transducer Source that yields all the lines of
+its file.
 
 To count the lines of a file:
 
@@ -726,8 +736,8 @@ To count the lines of a file:
   {:transducers-file path})
 
 (fn csv-read [path]
-  "Given a `path` to a CSV file, create a Transducer Source that yields all lines
-of the file as key-value Tables.
+  "Source: Given a `path` to a CSV file, create a Transducer Source that yields all
+lines of the file as key-value Tables.
 
 ```fennel :skip-test
 (transduce pass count (csv-read \"data.csv\"))
@@ -735,7 +745,8 @@ of the file as key-value Tables.
   {:transducers-csv path})
 
 (fn iter [iterator]
-  "Given any `iterator`, create a Transducer Source that yields all of its input.
+  "Source: Given any `iterator`, create a Transducer Source that yields all of its
+input.
 
 ```fennel
 (let [res (transduce pass cons (iter (string.gmatch \"hello,world,cats\" \"[^,]+\")))]
@@ -744,7 +755,7 @@ of the file as key-value Tables.
   {:transducers-iter iterator})
 
 (fn repeat [item]
-  "Endlessly yield a given `item`.
+  "Source: Endlessly yield a given `item`.
 
 ```fennel
 (assert (table.= [5 5 5] (transduce (take 3) cons (repeat 5))))
@@ -752,7 +763,7 @@ of the file as key-value Tables.
   {:transducers-gen (fn [] item)})
 
 (fn cycle [tbl]
-  "Given a `tbl`, endlessly yields its elements.
+  "Source: Given a `tbl`, endlessly yields its elements.
 
 ```fennel
 (assert (table.= [1 2 3 1 2] (transduce (take 5) cons (cycle [1 2 3]))))
@@ -770,9 +781,9 @@ of the file as key-value Tables.
          yield))}))
 
 (lambda ints [start ?step]
-  "Yield all integers, beginning with `start` and advancing by an optional `?step`
-which can be positive or negative. If you only want a specific range within the
-transduction, then use `take-while' within your transducer chain.
+  "Source: Yield all integers, beginning with `start` and advancing by an optional
+`?step` which can be positive or negative. If you only want a specific range
+within the transduction, then use `take-while' within your transducer chain.
 
 ```fennel
 (assert (table.= [1 2 3 4 5] (transduce (take 5) cons (ints 1))))
@@ -792,7 +803,7 @@ transduction, then use `take-while' within your transducer chain.
   "Recursively determine if two tables are equal, non-Baker style."
   (match (type a)
     :table (and (= (length a) (length b))
-                (transduce (map table.=) (all (fn [x] x)) a b))
+                (transduce (map table.=) (all? (fn [x] x)) a b))
     _ (= a b)))
 
 {:transduce transduce
@@ -825,6 +836,8 @@ transduction, then use `take-while' within your transducer chain.
  :average average
  :all all
  :any any
+ :all? all?
+ :any? any?
  :first first
  :last last
  :csv-write csv-write
