@@ -713,5 +713,5 @@ than `n`, then this yields nothing.
 License: GPLv3
 
 
-<!-- Generated with Fenneldoc v1.0.0
+<!-- Generated with Fenneldoc v1.0.1
      https://gitlab.com/andreyorst/fenneldoc -->

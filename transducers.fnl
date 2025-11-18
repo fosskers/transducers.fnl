@@ -22,7 +22,7 @@
 
 (fn fuse [keys vals]
   "Fuse the elements of two sequential tables into a single key-value table."
-  (when (~= (length keys) (length vals))
+  (when (not= (length keys) (length vals))
     (error "Lengths of key and value tables do not match!"))
   (collect [i k (ipairs keys)]
     k (. vals i)))
@@ -49,7 +49,7 @@ within transducers that have the concept of short-circuiting, like `take'.
 (assert (reduced? (reduced false)))
 ```"
   (and (= :table (type tbl))
-       (~= nil (unreduce tbl))))
+       (not= nil (unreduce tbl))))
 
 (fn table-reduce [f id tbl ...]
   (let [tables [...]
@@ -181,7 +181,7 @@ Notice that the function passed to `map' can be of any arity to accomodate this.
 **Note:** This takes a `reducer` as an argument, but as seen in the example,
 this function is expected to be passed plain, without any argument."
   (fn [result input]
-    (if (~= nil input)
+    (if (not= nil input)
         (reducer result input)
         (reducer result))))
 
@@ -193,7 +193,7 @@ this function is expected to be passed plain, without any argument."
 ```"
   (fn [reducer]
     (fn [result input ...]
-      (if (~= nil input)
+      (if (not= nil input)
           (reducer result (f input ...))
           (reducer result)))))
 
@@ -205,7 +205,7 @@ this function is expected to be passed plain, without any argument."
 ```"
   (fn [reducer]
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if (pred input)
               (reducer result input)
               result)
@@ -221,9 +221,9 @@ that are non-nil.
 ```"
   (fn [reducer]
     (fn [result input ...]
-      (if (~= nil input)
+      (if (not= nil input)
           (let [x (f input ...)]
-            (if (~= nil x)
+            (if (not= nil x)
                 (reducer result x)
                 result))
           (reducer result)))))
@@ -239,7 +239,7 @@ that are non-nil.
   (fn [reducer]
     (var dropped 0)
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if (< dropped n)
               (do (set dropped (+ 1 dropped))
                   result)
@@ -256,7 +256,7 @@ that are non-nil.
   (fn [reducer]
     (var drop? true)
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if (and drop? (pred input))
               result
               (do (set drop? false)
@@ -274,7 +274,7 @@ that are non-nil.
   (fn [reducer]
     (var kept 0)
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if (= kept n)
               (reduced result)
               (do (set kept (+ 1 kept))
@@ -290,7 +290,7 @@ any element fails the test.
 ```"
   (fn [reducer]
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if (not (pred input))
               (reduced result)
               (reducer result input))
@@ -308,7 +308,7 @@ any element fails the test.
 this function is expected to be passed plain, without any argument."
   (var n 1)
   (fn [result input]
-    (if (~= nil input)
+    (if (not= nil input)
         (let [pair [n input]]
           (set n (+ 1 n))
           (reducer result pair))
@@ -324,7 +324,7 @@ this function is expected to be passed plain, without any argument."
   (fn [reducer]
     (var send? false)
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if send?
               (let [result (reducer result elem)]
                 (if (reduced? result)
@@ -345,7 +345,7 @@ this function is expected to be passed plain, without any argument."
 **Note:** This takes a `reducer` as an argument, but as seen in the example,
 this function is expected to be passed plain, without any argument."
   (fn [result input]
-    (if (~= nil input)
+    (if (not= nil input)
         (accumulate [r result _ i (ipairs input) &until (reduced? r)]
           (reducer r i))
         (reducer result))))
@@ -362,7 +362,7 @@ accumulated state, which may be shorter than `n`.
   (fn [reducer]
     (var coll [])
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (do (table.insert coll input)
               (if (< (length coll) n)
                   result
@@ -395,7 +395,7 @@ than `n`, then this yields nothing.
   (fn [reducer]
     (var queue [])
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (do (table.insert queue input)
               (let [len (length queue)]
                 (if (< len n) result
@@ -421,7 +421,7 @@ the transduction.
     (var prev :nothing)
     (var coll [])
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (let [fout (f input)]
             (if (or (= fout prev) (= prev :nothing))
                 (do (set prev fout)
@@ -452,7 +452,7 @@ you're not careful.
 this function is expected to be passed plain, without any argument."
   (let [seen {}]
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if (. seen input)
               result
               (do (tset seen input true)
@@ -471,7 +471,7 @@ this function is expected to be passed plain, without any argument."
 this function is expected to be passed plain, without any argument."
   (var prev :nothing)
   (fn [result input]
-    (if (~= nil input)
+    (if (not= nil input)
         (if (= prev input)
             result
             (do (set prev input)
@@ -491,7 +491,7 @@ included.
   (fn [reducer]
     (var curr 1)
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (if (= 1 curr)
               (do (set curr n)
                   (reducer result input))
@@ -511,7 +511,7 @@ through the transduction.
   (fn [reducer]
     (var prev seed)
     (fn [result input]
-      (if (~= nil input)
+      (if (not= nil input)
           (let [old prev
                 result (reducer result old)]
             (if (reduced? result)
@@ -535,8 +535,8 @@ through the transduction.
 
 **Note:** This takes `acc` and `input` arguments, but as seen in the example,
 this function is expected to be passed plain, without any arguments."
-  (if (and (~= nil acc) (~= nil input)) (+ 1 acc)
-      (~= nil acc) acc
+  (if (and (not= nil acc) (not= nil input)) (+ 1 acc)
+      (not= nil acc) acc
       0))
 
 (fn cons [acc input]
@@ -549,8 +549,8 @@ transduction.
 
 **Note:** This takes `acc` and `input` arguments, but as seen in the example,
 this function is expected to be passed plain, without any arguments."
-  (if (and (~= nil acc) (~= nil input)) (do (table.insert acc input) acc)
-      (~= nil acc) acc
+  (if (and (not= nil acc) (not= nil input)) (do (table.insert acc input) acc)
+      (not= nil acc) acc
       []))
 
 (fn keyed [acc input]
@@ -560,10 +560,10 @@ fused into a single result.
 
 **Note:** This takes `acc` and `input` arguments, but as seen in the example,
 this function is expected to be passed plain, without any arguments."
-  (if (and (~= nil acc) (~= nil input))
+  (if (and (not= nil acc) (not= nil input))
       (do (each [key value (pairs input)] (tset acc key value))
           acc)
-      (~= nil acc) acc
+      (not= nil acc) acc
       {}))
 
 ;; (transduce (map (fn [s] {s (length s)})) keyed ["cats" "Hello" "there" "cats"])
@@ -603,12 +603,12 @@ with `false` if any element fails the test.
 (assert (not (transduce pass (all #(= 3 (length $1))) [\"abc\" \"de\" \"ghi\"])))
 ```"
   (fn [acc input]
-    (if (and (~= nil acc) (~= nil input))
+    (if (and (not= nil acc) (not= nil input))
         (let [test (pred input)]
           (if (and acc test)
               true
               (reduced false)))
-        (~= nil acc) acc
+        (not= nil acc) acc
       true)))
 
 (fn any [pred]
@@ -620,12 +620,12 @@ the transduction as soon as the condition is met.
 (assert (transduce pass (any #(= 0 (% $1 2))) [1 3 5 7 2]))
 ```"
   (fn [acc input]
-    (if (and (~= nil acc) (~= nil input))
+    (if (and (not= nil acc) (not= nil input))
         (let [test (pred input)]
           (if test
               (reduced true)
               false))
-        (~= nil acc) acc
+        (not= nil acc) acc
         false)))
 
 (fn average [fallback]
@@ -638,10 +638,10 @@ transduction (thus protecting from division-by-zero).
 ```"
   (var items 0)
   (fn [acc input]
-    (if (and (~= nil acc) (~= nil input))
+    (if (and (not= nil acc) (not= nil input))
         (do (set items (+ 1 items))
             (+ acc input))
-        (~= nil acc)
+        (not= nil acc)
         (if (= 0 items)
             fallback
             (/ acc items))
@@ -654,8 +654,8 @@ transduction (thus protecting from division-by-zero).
 (assert (= 6 (transduce (filter #(= 0 (% $1 2))) (first 0) [1 3 5 6 9])))
 ```"
   (fn [acc input]
-    (if (and (~= nil acc) (~= nil input)) (reduced input)
-        (~= nil acc) acc
+    (if (and (not= nil acc) (not= nil input)) (reduced input)
+        (not= nil acc) acc
         fallback)))
 
 (fn last [fallback]
@@ -665,8 +665,8 @@ transduction (thus protecting from division-by-zero).
 (assert (= 10 (transduce pass (last 0) [2 4 6 7 10])))
 ```"
   (fn [acc input]
-    (if (and (~= nil acc) (~= nil input)) input
-        (~= nil acc) acc
+    (if (and (not= nil acc) (not= nil input)) input
+        (not= nil acc) acc
         fallback)))
 
 (fn csv-write [path headers]
@@ -680,7 +680,7 @@ all CSV data that made it through the transduction.
   (let [f (assert (io.open path :w))]
     (f:write (.. (table.concat headers ",") "\n"))
     (fn [acc input]
-      (if (and (~= nil acc) (~= nil input))
+      (if (and (not= nil acc) (not= nil input))
           (-> (icollect [_ k (ipairs headers)]
                 (let [val (. input k)]
                   (match (type val)
@@ -690,9 +690,9 @@ all CSV data that made it through the transduction.
               (table.concat ",")
               (.. "\n")
               (f:write))
-          (~= nil acc) (do (f:flush)
-                           (f:close)
-                           true)
+          (not= nil acc) (do (f:flush)
+                             (f:close)
+                             true)
           true))))
 
 (fn fold [f seed]
@@ -708,8 +708,8 @@ least 1 argument. For functions like this, `fold` is appropriate.
 (assert (= 1000 (transduce pass (fold math.max 0) [1 2 3 4 1000 5 6])))
 ```"
   (fn [acc input]
-    (if (and (~= nil acc) (~= nil input)) (f acc input)
-        (~= nil acc) acc
+    (if (and (not= nil acc) (not= nil input)) (f acc input)
+        (not= nil acc) acc
         seed)))
 
 ;; --- Sources --- ;;

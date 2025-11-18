@@ -83,6 +83,8 @@ generators are =repeat= and =cycle=.
 Let's sum the squares of the first 1000 even integers:
 
 #+begin_src fennel
+(local t (require :transducers))
+
 (t.transduce
  (t.comp (t.filter #(= 0 (% $1 2))) ;; (2) Keep only even numbers.
          (t.take 1000)              ;; (3) Keep the first 1000 filtered evens.
@@ -90,6 +92,9 @@ Let's sum the squares of the first 1000 even integers:
  t.add       ;; (5) Reducer: Add up all the squares.
  (t.ints 1)) ;; (1) Source: Generate all positive integers.
 #+end_src
+
+#+RESULTS:
+: 1335334000
 
 Two things of note here:
 
