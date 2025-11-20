@@ -161,6 +161,8 @@ analogous to how `zip` works in many languages. For example:
 Notice that the function passed to `map' can be of any arity to accomodate this."
   (let [init (reducer)
         xf (xform reducer)
+        ;; NOTE: 2025-11-21 This simulates the generic dispatch we do in other
+        ;; implementations.
         result (match source
                  {:transducers-iter iterator} (iter-reduce xf init iterator)
                  {:transducers-file path} (file-reduce xf init path)
