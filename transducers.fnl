@@ -594,10 +594,6 @@ passed to higher-order functions and behaves as a legal reducer.
       (and a (= nil b)) a
       (* a b)))
 
-(fn all [pred]
-  "Deprecated: Use `all?' instead."
-  (all? pred))
-
 (fn all? [pred]
   "Reducer: Yield `true` if all elements of the transduction satisfy `pred`.
 Short-circuit with `false` if any element fails the test.
@@ -615,9 +611,9 @@ Short-circuit with `false` if any element fails the test.
         (not= nil acc) acc
       true)))
 
-(fn any [pred]
-  "Deprecated: Use `any?' instead."
-  (any? pred))
+(fn all [pred]
+  "Deprecated: Use `all?' instead."
+  (all? pred))
 
 (fn any? [pred]
   "Reducer: Yield `true` if any element in the transduction satisfies `pred`.
@@ -635,6 +631,10 @@ Short-circuits the transduction as soon as the condition is met.
               false))
         (not= nil acc) acc
         false)))
+
+(fn any [pred]
+  "Deprecated: Use `any?' instead."
+  (any? pred))
 
 (fn average [fallback]
   "Reducer: Calculate the average value of all numeric elements in a transduction.
