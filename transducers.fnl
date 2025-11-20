@@ -439,6 +439,24 @@ the transduction.
                 (reducer (unreduce final))
                 (reducer final)))))))
 
+(fn unique-by [f]
+  "Like `unique', but determine uniqueness via a given function `f'.
+
+```fennel
+(let [res (transduce (unique-by #(. $1 2)) cons [[:a 1] [:b 2] [:c 1] [:d 3]])]
+  (assert (table.= [[:a 1] [:b 2] [:d 3]] res)))
+```"
+  (fn [reducer]
+    (let [seen {}]
+      (fn [result input]
+        (if (not= nil input)
+            (let [mapped (f input)]
+              (if (. seen mapped)
+                  result
+                  (do (tset seen mapped true)
+                      (reducer result input))))
+            (reducer result))))))
+
 (fn unique [reducer]
   "Only allow values to pass through the transduction once each.
 Stateful; this uses a Table internally as a set, so could get quite heavy if
@@ -451,14 +469,7 @@ you're not careful.
 
 **Note:** This takes a `reducer` as an argument, but as seen in the example,
 this function is expected to be passed plain, without any argument."
-  (let [seen {}]
-    (fn [result input]
-      (if (not= nil input)
-          (if (. seen input)
-              result
-              (do (tset seen input true)
-                  (reducer result input)))
-          (reducer result)))))
+  ((unique-by (fn [x] x)) reducer))
 
 (fn dedup [reducer]
   "Remove adjecent duplicates from the transduction.
@@ -824,6 +835,7 @@ within the transduction, then use `take-while' within your transducer chain.
  :window window
  :group-by group-by
  :unique unique
+ :unique-by unique-by
  :dedup dedup
  :step step
  :scan scan

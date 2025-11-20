@@ -18,7 +18,7 @@
                         :concat
                         :segment :window
                         :group-by
-                        :unique :dedup
+                        :unique :unique-by :dedup
                         :step :scan]}
                {:title "Reducers"
                 :description "Reduction 'targets'. Also known as 'folds'."
