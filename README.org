@@ -31,6 +31,7 @@ implementations!
   - [[#processing-csv-data][Processing CSV Data]]
 - [[#api][API]]
 - [[#performance][Performance]]
+- [[#testing-and-documentation][Testing and Documentation]]
 
 * History and Motivation
 
@@ -153,3 +154,22 @@ Transducers themselves is minimal.
 
 # Rust: 240ms
 # Hand-written Fennel (LuaJIT): 1.44s
+
+* Testing and Documentation
+
+To generate documentation and run unit tests:
+
+#+begin_example
+fenneldoc transducers.fnl
+#+end_example
+
+To manually run some testing scripts:
+
+#+begin_example
+cd tests/
+fennel --lua lua table.fnl
+fennel --lua luajit table.fnl
+#+end_example
+
+Et cetera.
+
