@@ -3,5 +3,36 @@
   {:name "Transducers"
    :version "1.0.0"
    :description "Ergonomic, efficient data processing."
-   :license "GPLv3"}}}
+   :license "GPLv3"
+   :doc-order [{:title "Entry"
+                :description "High-level entrypoints."
+                :items [:transduce]}
+               {:title "Transducers"
+                :description "Various 'mapping' functions."
+                :items [:pass :map
+                        :filter :filter-map
+                        :drop :drop-while
+                        :take :take-while
+                        :enumerate
+                        :intersperse
+                        :concat
+                        :segment :window
+                        :group-by
+                        :unique :dedup
+                        :step :scan]}
+               {:title "Reducers"
+                :description "Reduction 'targets'. Also known as 'folds'."
+                :items [:count
+                        :cons :keyed
+                        :add :mul :average
+                        :all? :any? :all :any
+                        :first :last
+                        :csv-write
+                        :fold]}
+               {:title "Sources"
+                :description "Sources of data to iterate over."
+                :items [:iter :file :repeat :cycle :ints :csv-read]}
+               {:title "Utilities"
+                :items [:comp
+                        :reduced :reduced? :unreduce]}]}}}
 

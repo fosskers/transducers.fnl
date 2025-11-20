@@ -103,8 +103,7 @@ within transducers that have the concept of short-circuiting, like `take'.
       (recurse id))))
 
 (lambda transduce [xform reducer source ...]
-  "The entry point for processing a data source via transducer functions. It
-accepts:
+  "The entry point for processing a data source via transducer functions. It accepts:
 
 - `xform`: a chain of composed transducer functions, like `map' and `filter'.
 - `reducer`: a reducer function to \"collect\" or \"fold\" all the final elements together.
