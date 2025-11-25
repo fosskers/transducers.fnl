@@ -1,6 +1,9 @@
 ;; --- Utilities --- ;;
 
-;; TODO Make this a macro.
+;; NOTE: 2025-11-22 I wanted to make this a macro and did successfully implement
+;; it as such, but a quirk of Fennel makes it so that macros and normal
+;; functions can't be exported from the same file, meaning I would have to move
+;; `comp' and the API would break.
 (fn comp [f ...]
   "Function composition of `f` with any number of other functions.
 
@@ -536,6 +539,34 @@ through the transduction.
                 (reducer (unreduce result))
                 (reducer result)))))))
 
+(fn once [item]
+  "Transducer: Inject some `item` onto the front of the transduction.
+
+```fennel
+(let [res (transduce (comp (filter #(> $1 10))
+                           (once :hi)
+                           (take 3))
+                     cons (ints 1))]
+  (assert (table.= res [:hi 11 12])))
+```"
+  (fn [reducer]
+    (var unused? true)
+    (fn [result input]
+      ;; NOTE: 2025-11-25 Fennel multi-ifs are unintuitive.
+      (if (and unused? input) (let [res (reducer result item)]
+                                (if (reduced? res)
+                                    res
+                                    (do (set unused? false)
+                                        (reducer res input))))
+          input (reducer result input)
+          (reducer result)))))
+
+;; (let [res (transduce (comp (filter #(> $1 10))
+;;                            (once :hi)
+;;                            (take 3))
+;;                      cons (ints 1))]
+;;   (assert (table.= res [:hi 11 12])))
+
 ;; --- Reducers --- ;;
 
 (fn count [acc input]
@@ -839,6 +870,7 @@ within the transduction, then use `take-while' within your transducer chain.
  :dedup dedup
  :step step
  :scan scan
+ :once once
  ;; --- Reducers --- ;;
  :count count
  :cons cons

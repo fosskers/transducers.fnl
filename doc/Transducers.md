@@ -23,6 +23,7 @@ Ergonomic, efficient data processing.
 - [`dedup`](#dedup)
 - [`step`](#step)
 - [`scan`](#scan)
+- [`once`](#once)
 - [`count`](#count)
 - [`cons`](#cons)
 - [`keyed`](#keyed)
@@ -407,6 +408,23 @@ through the transduction.
 ```fennel
 (assert (table.= [0 1 3 6 10] (transduce (scan add 0) cons [1 2 3 4])))
 (assert (table.= [0 1] (transduce (comp (scan add 0) (take 2)) cons [1 2 3 4])))
+```
+
+### `once`
+Function signature:
+
+```
+(once item)
+```
+
+Transducer: Inject some `item` onto the front of the transduction.
+
+```fennel
+(let [res (transduce (comp (filter #(> $1 10))
+                           (once :hi)
+                           (take 3))
+                     cons (ints 1))]
+  (assert (table.= res [:hi 11 12])))
 ```
 
 ## Reducers
