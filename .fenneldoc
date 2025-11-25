@@ -33,7 +33,7 @@
                         :for-each]}
                {:title "Sources"
                 :description "Sources of data to iterate over."
-                :items [:iter :file :repeat :cycle :ints :csv-read]}
+                :items [:iter :file :repeat :cycle :ints :reversed :csv-read]}
                {:title "Utilities"
                 :items [:comp
                         :reduced :reduced? :unreduce]}]}}}

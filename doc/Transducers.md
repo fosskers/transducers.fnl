@@ -45,6 +45,7 @@ Ergonomic, efficient data processing.
 - [`repeat`](#repeat)
 - [`cycle`](#cycle)
 - [`ints`](#ints)
+- [`reversed`](#reversed)
 - [`csv-read`](#csv-read)
 - [`comp`](#comp)
 - [`reduced`](#reduced)
@@ -746,6 +747,19 @@ within the transduction, then use [`take-while`](#take-while) within your transd
 ```fennel
 (assert (table.= [1 2 3 4 5] (transduce (take 5) cons (ints 1))))
 (assert (table.= [1 0 -1 -2 -3] (transduce (take 5) cons (ints 1 -1))))
+```
+
+### `reversed`
+Function signature:
+
+```
+(reversed items)
+```
+
+Source: Yield some `items` in reverse order.
+
+```fennel
+(assert (table.= [3 2 1] (transduce pass cons (reversed [1 2 3]))))
 ```
 
 ### `csv-read`

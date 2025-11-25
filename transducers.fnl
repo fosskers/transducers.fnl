@@ -68,6 +68,18 @@ within transducers that have the concept of short-circuiting, like `take'.
                 (recurse acc (+ 1 i))))))
     (recurse id 1)))
 
+(fn reversed-reduce [f id tbl]
+  (fn recurse [acc i]
+    (if (<= i 0)
+        acc
+        (let [res (f acc (. tbl i))]
+          (if (reduced? res)
+              (unreduce res)
+              (recurse res (- i 1))))))
+  (recurse id (length tbl)))
+
+;; (transduce pass cons (reversed [1 2 3]))
+
 (fn iter-reduce [f id iterator]
   "Reduce over the contents of a Lua iterator."
   (let [acc (accumulate [acc id item iterator &until (reduced? acc)]
@@ -170,6 +182,7 @@ Notice that the function passed to `map' can be of any arity to accomodate this.
                  {:transducers-file path} (file-reduce xf init path)
                  {:transducers-gen gen} (generator-reduce xf init gen)
                  {:transducers-csv path} (csv-reduce xf init path)
+                 {:transducers-reversed items} (reversed-reduce xf init items)
                  [] (table-reduce xf init source ...))]
     (xf result)))
 
@@ -876,6 +889,14 @@ within the transduction, then use `take-while' within your transducer chain.
          (set curr (+ curr step))
          old))}))
 
+(fn reversed [items]
+  "Source: Yield some `items` in reverse order.
+
+```fennel
+(assert (table.= [3 2 1] (transduce pass cons (reversed [1 2 3]))))
+```"
+  {:transducers-reversed items})
+
 ;; --- Misc. --- ;;
 
 (fn table.= [a b]
@@ -930,6 +951,7 @@ within the transduction, then use `take-while' within your transducer chain.
  :repeat repeat
  :cycle cycle
  :ints ints
+ :reversed reversed
  :csv-read csv-read
  ;; --- Utilities --- ;;
  :comp comp
