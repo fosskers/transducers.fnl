@@ -39,6 +39,7 @@ Ergonomic, efficient data processing.
 - [`last`](#last)
 - [`csv-write`](#csv-write)
 - [`fold`](#fold)
+- [`for-each`](#for-each)
 - [`iter`](#iter)
 - [`file`](#file)
 - [`repeat`](#repeat)
@@ -652,6 +653,23 @@ least 1 argument. For functions like this, `fold` is appropriate.
 ```fennel
 (assert (= 1000 (transduce pass (fold math.max 0) [1 2 3 4 1000 5 6])))
 ```
+
+### `for-each`
+Function signature:
+
+```
+(for-each f)
+```
+
+Reducer: Call some effectful function `f` on every item to be reduced, and yield
+a final `true`.
+
+```
+(transduce pass (for-each #(print $1)) [1 2 3 4])
+```
+
+Note: This is called `for` in the Common Lisp and Elisp implementations, but
+since `for` is a reserved macro in Fennel we can't use that name.
 
 ## Sources
 

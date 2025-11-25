@@ -29,7 +29,8 @@
                         :all? :any? :all :any
                         :first :last
                         :csv-write
-                        :fold]}
+                        :fold
+                        :for-each]}
                {:title "Sources"
                 :description "Sources of data to iterate over."
                 :items [:iter :file :repeat :cycle :ints :csv-read]}

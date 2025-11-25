@@ -784,6 +784,23 @@ this function is expected to be passed plain, without any arguments."
       (and acc (not input)) acc
       {}))
 
+(fn for-each [f]
+  "Reducer: Call some effectful function `f` on every item to be reduced, and yield
+a final `true`.
+
+```
+(transduce pass (for-each #(print $1)) [1 2 3 4])
+```
+
+Note: This is called `for` in the Common Lisp and Elisp implementations, but
+since `for` is a reserved macro in Fennel we can't use that name."
+  (fn [acc input]
+    (if (and acc input) (do (f input) true)
+        acc true
+        true)))
+
+;; (transduce pass (for-each #(print $1)) [1 2 3 4])
+
 ;; --- Sources --- ;;
 
 (fn file [path]
@@ -905,6 +922,7 @@ within the transduction, then use `take-while' within your transducer chain.
  :first first
  :last last
  :fold fold
+ :for-each for-each
  :csv-write csv-write
  ;; --- Sources --- ;;
  :iter iter
