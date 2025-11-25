@@ -24,9 +24,10 @@ Ergonomic, efficient data processing.
 - [`step`](#step)
 - [`scan`](#scan)
 - [`once`](#once)
-- [`count`](#count)
 - [`cons`](#cons)
 - [`keyed`](#keyed)
+- [`count`](#count)
+- [`quantities`](#quantities)
 - [`add`](#add)
 - [`mul`](#mul)
 - [`average`](#average)
@@ -431,22 +432,6 @@ Transducer: Inject some `item` onto the front of the transduction.
 
 Reduction 'targets'. Also known as 'folds'.
 
-### `count`
-Function signature:
-
-```
-(count acc input)
-```
-
-Reducer: Count the number of elements that made it through the transduction.
-
-```fennel
-(assert (= 4 (transduce pass count [1 2 3 4])))
-```
-
-**Note:** This takes `acc` and `input` arguments, but as seen in the example,
-this function is expected to be passed plain, without any arguments.
-
 ### `cons`
 Function signature:
 
@@ -474,6 +459,39 @@ Function signature:
 Reducer: Build up a key-value Table of all elements that made it through the
 transduction. The input values can be key-value tables of any size; they will be
 fused into a single result.
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments.
+
+### `count`
+Function signature:
+
+```
+(count acc input)
+```
+
+Reducer: Count the number of elements that made it through the transduction.
+
+```fennel
+(assert (= 4 (transduce pass count [1 2 3 4])))
+```
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments.
+
+### `quantities`
+Function signature:
+
+```
+(quantities acc input)
+```
+
+Reducer: Count the occurrences of every item in the transduction.
+
+```fennel
+(assert (table.= {1 4 2 2 3 2 4 2 5 1 :hi 1}
+                 (transduce pass quantities [1 1 2 1 3 4 5 4 3 2 1 :hi])))
+```
 
 **Note:** This takes `acc` and `input` arguments, but as seen in the example,
 this function is expected to be passed plain, without any arguments.

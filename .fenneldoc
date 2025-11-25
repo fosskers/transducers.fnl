@@ -23,8 +23,8 @@
                         :once]}
                {:title "Reducers"
                 :description "Reduction 'targets'. Also known as 'folds'."
-                :items [:count
-                        :cons :keyed
+                :items [:cons :keyed
+                        :count :quantities
                         :add :mul :average
                         :all? :any? :all :any
                         :first :last

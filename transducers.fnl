@@ -765,6 +765,25 @@ least 1 argument. For functions like this, `fold` is appropriate.
         (not= nil acc) acc
         seed)))
 
+(fn quantities [acc input]
+  "Reducer: Count the occurrences of every item in the transduction.
+
+```fennel
+(assert (table.= {1 4 2 2 3 2 4 2 5 1 :hi 1}
+                 (transduce pass quantities [1 1 2 1 3 4 5 4 3 2 1 :hi])))
+```
+
+**Note:** This takes `acc` and `input` arguments, but as seen in the example,
+this function is expected to be passed plain, without any arguments."
+  (if (and acc input) (let [count (. acc input)]
+                        (if count
+                            (do (tset acc input (+ 1 count))
+                                acc)
+                            (do (tset acc input 1)
+                                acc)))
+      (and acc (not input)) acc
+      {}))
+
 ;; --- Sources --- ;;
 
 (fn file [path]
@@ -872,10 +891,10 @@ within the transduction, then use `take-while' within your transducer chain.
  :scan scan
  :once once
  ;; --- Reducers --- ;;
- :count count
  :cons cons
  :keyed keyed
- :fold fold
+ :count count
+ :quantities quantities
  :add add
  :mul mul
  :average average
@@ -885,6 +904,7 @@ within the transduction, then use `take-while' within your transducer chain.
  :any? any?
  :first first
  :last last
+ :fold fold
  :csv-write csv-write
  ;; --- Sources --- ;;
  :iter iter
